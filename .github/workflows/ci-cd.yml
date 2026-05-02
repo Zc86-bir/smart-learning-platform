@@ -6,12 +6,8 @@ on:
   pull_request:
     branches: [master, main]
 
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
-
 jobs:
-  # ========== 阶段1: 构建与测试 ==========
+  # ========== Build & Test ==========
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -41,8 +37,8 @@ jobs:
           path: target/*.jar
           retention-days: 1
 
-  # ========== 阶段2: Docker 构建 ==========
-  docker:
+  # ========== Deploy to Server ==========
+  deploy:
     needs: build
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
@@ -58,52 +54,12 @@ jobs:
           name: app-jar
           path: target/
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Login to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=sha,prefix=
-            type=ref,event=branch
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-  # ========== 阶段3: 部署到服务器 ==========
-  deploy:
-    needs: docker
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push'
-    timeout-minutes: 10
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
       - name: Setup SSH key
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts
+          ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts
 
       - name: Deploy to server
         uses: appleboy/ssh-action@v1.0.3
@@ -111,40 +67,62 @@ jobs:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USERNAME }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script_stop: true
           script: |
             set -e
 
-            echo "=== Pulling latest code ==="
-            cd ~/smart-learn || mkdir -p ~/smart-learn && cd ~/smart-learn
+            DEPLOY_DIR="/opt/smart-learn"
 
-            if [ -d ".git" ]; then
-              git pull origin master
-            else
-              git clone git@github.com:${{ github.repository }}.git .
-              git checkout master
+            echo "=== Step 1: Pull latest code ==="
+            cd $DEPLOY_DIR
+            git pull origin master
+
+            echo "=== Step 2: Ensure .env.docker exists ==="
+            if [ ! -f .env.docker ]; then
+              echo "WARNING: .env.docker not found, creating with defaults"
+              cat > .env.docker << 'ENVEOF'
+            DB_PASSWORD=T9$$mK2pL8nQ4wX7vR3
+            JWT_SECRET=Y2hhbmdlLXRoaXMtdG8tYS1sb25nLXNlY3JldC1rZXktaW4tcHJvZHVjdGlvbi1lbnZpcm9ubWVudA==
+            MIMO_API_KEY=your-api-key
+            ENVEOF
             fi
 
-            echo "=== Stopping old containers ==="
+            echo "=== Step 3: Stop old containers ==="
             docker compose -f docker-compose.prod.yml down --remove-orphans 2>/dev/null || true
 
-            echo "=== Pulling latest Docker image ==="
-            docker compose -f docker-compose.prod.yml pull 2>/dev/null || true
-
-            echo "=== Starting services ==="
+            echo "=== Step 4: Build and start services ==="
             docker compose -f docker-compose.prod.yml up -d --build
 
-            echo "=== Waiting for app to be healthy ==="
+            echo "=== Step 5: Wait for app to be healthy ==="
             for i in $(seq 1 30); do
-              if docker compose -f docker-compose.prod.yml ps | grep -q "healthy"; then
-                echo "App is healthy!"
+              HEALTH=$(docker inspect smartlearn-app --format='{{.State.Health.Status}}' 2>/dev/null || echo "starting")
+              if [ "$HEALTH" = "healthy" ]; then
+                echo "✅ App is healthy after ${i} checks!"
                 break
               fi
-              sleep 2
+              echo "⏳ Waiting... ($i/30) Status: $HEALTH"
+              sleep 3
             done
 
-            echo "=== Deployment complete ==="
+            echo ""
+            echo "=== Step 6: Service Status ==="
             docker compose -f docker-compose.prod.yml ps
 
-      - name: Verify deployment
-        run: |
-          echo "Deployment finished. Check server logs for details."
+            echo ""
+            echo "=== Step 7: API Health Check ==="
+            curl -sf http://localhost:7080/actuator/health && echo " ✅ Health OK" || echo " ❌ Health failed"
+
+            echo ""
+            echo "=== Step 8: Login Test ==="
+            curl -sf -X POST http://localhost:7080/api/auth/login \
+              -H "Content-Type: application/json" \
+              -d '{"username":"admin","password":"123456"}' | head -c 200 && echo " ✅ Login OK" || echo " ❌ Login failed"
+
+            echo ""
+            echo "=== Step 9: Memory Usage ==="
+            free -h
+
+            echo ""
+            echo "=== 🎉 Deployment Complete ==="
+            echo "Access: http://${{ secrets.DEPLOY_HOST }}:7080"
+            echo "Swagger: http://${{ secrets.DEPLOY_HOST }}:7080/swagger-ui.html"
