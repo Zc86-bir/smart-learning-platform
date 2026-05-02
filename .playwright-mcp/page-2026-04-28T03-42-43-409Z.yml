@@ -1,0 +1,113 @@
+- generic [ref=e4]:
+  - complementary [ref=e5]:
+    - generic [ref=e6]:
+      - generic [ref=e7]: S
+      - generic [ref=e8]: 智能学习平台
+    - navigation [ref=e9]:
+      - generic [ref=e10]: 出题
+      - button "📝 AI出题" [ref=e11] [cursor=pointer]:
+        - generic [ref=e12]: 📝
+        - generic [ref=e13]: AI出题
+      - button "📋 智能组卷" [ref=e14] [cursor=pointer]:
+        - generic [ref=e15]: 📋
+        - generic [ref=e16]: 智能组卷
+      - generic [ref=e17]: 管理
+      - button "📥 批量导入 21" [ref=e18] [cursor=pointer]:
+        - generic [ref=e19]: 📥
+        - generic [ref=e20]: 批量导入
+        - generic [ref=e21]: "21"
+      - button "📚 题库管理 21" [ref=e22] [cursor=pointer]:
+        - generic [ref=e23]: 📚
+        - generic [ref=e24]: 题库管理
+        - generic [ref=e25]: "21"
+    - generic [ref=e27]:
+      - generic [ref=e28]: 系
+      - generic [ref=e29]:
+        - generic [ref=e30]: 系统管理员
+        - generic [ref=e31]: 管理员
+      - button "退出登录" [ref=e32] [cursor=pointer]:
+        - img [ref=e33]
+  - generic [ref=e36]:
+    - banner [ref=e37]:
+      - heading "AI出题" [level=1] [ref=e39]
+      - generic [ref=e41] [cursor=pointer]:
+        - img [ref=e42]
+        - text: 管理后台
+    - generic [ref=e45]:
+      - generic [ref=e46]:
+        - generic [ref=e48]:
+          - generic [ref=e49]:
+            - generic [ref=e50]: 题库总量
+            - generic [ref=e51]: "21"
+          - img [ref=e53]
+        - generic [ref=e57]:
+          - generic [ref=e58]:
+            - generic [ref=e59]: 试卷数量
+            - generic [ref=e60]: "0"
+          - img [ref=e62]
+        - generic [ref=e66]:
+          - generic [ref=e67]:
+            - generic [ref=e68]: 可用模型
+            - generic [ref=e69]: "3"
+          - img [ref=e71]
+      - generic [ref=e74]:
+        - generic [ref=e76]:
+          - heading "AI 智能出题" [level=2] [ref=e77]
+          - paragraph [ref=e78]: 配置参数后由 AI 自动生成题目，支持多题型和知识点定制
+        - generic [ref=e79]:
+          - heading "出题配置" [level=3] [ref=e81]
+          - generic [ref=e82]:
+            - generic [ref=e83]:
+              - generic [ref=e84]:
+                - generic [ref=e85]: 学段
+                - combobox [active] [ref=e86] [cursor=pointer]:
+                  - option "请选择学段"
+                  - option "小学"
+                  - option "初中"
+                  - option "高中"
+                  - option "大学" [selected]
+              - generic [ref=e87]:
+                - generic [ref=e88]: 学科
+                - combobox [ref=e89] [cursor=pointer]:
+                  - option "请选择学科"
+                  - option "高等数学" [selected]
+                  - option "线性代数"
+                  - option "概率论"
+                  - option "数据结构"
+                  - option "操作系统"
+                  - option "计算机网络"
+                  - option "数据库"
+                  - option "大学英语"
+                  - option "计算机组成原理"
+                  - option "软件工程"
+              - generic [ref=e90]:
+                - generic [ref=e91]: 难度
+                - combobox [ref=e92] [cursor=pointer]:
+                  - option "简单"
+                  - option "中等" [selected]
+                  - option "困难"
+              - generic [ref=e93]:
+                - generic [ref=e94]: 知识点
+                - 'textbox "例如: HashMap底层结构" [ref=e95]'
+              - generic [ref=e96]:
+                - generic [ref=e97]: 数量
+                - spinbutton [ref=e98]: "3"
+              - generic [ref=e99]:
+                - generic [ref=e100]: 模型
+                - combobox [ref=e101] [cursor=pointer]:
+                  - option "mimo-v2-omni"
+                  - option "mimo-v2-pro"
+                  - option "mimo-v2-tts"
+                  - option "mimo-v2.5"
+                  - option "mimo-v2.5-pro" [selected]
+                  - option "mimo-v2.5-tts"
+                  - option "mimo-v2.5-tts-voiceclone"
+                  - option "mimo-v2.5-tts-voicedesign"
+            - generic [ref=e102]:
+              - generic [ref=e103]: 题型选择
+              - generic [ref=e104]:
+                - button "单选题" [ref=e105] [cursor=pointer]
+                - button "多选题" [ref=e106] [cursor=pointer]
+                - button "判断题" [ref=e107] [cursor=pointer]
+                - button "简答题" [ref=e108] [cursor=pointer]
+            - button "AI生成中..." [disabled] [ref=e112]

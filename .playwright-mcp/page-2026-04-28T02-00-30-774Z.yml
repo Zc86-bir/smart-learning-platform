@@ -1,0 +1,10 @@
+- generic [ref=e5]:
+  - generic [ref=e6]:
+    - generic [ref=e7]: S
+    - generic [ref=e8]: 智能学习平台
+  - paragraph [ref=e9]: 欢迎回来，请登录您的账号
+  - generic [ref=e10]:
+    - generic [ref=e11]: 用户名
+    - textbox "请输入用户名" [active] [ref=e12]
+  - button "登 录" [ref=e13] [cursor=pointer]
+  - generic [ref=e14]: 测试账号：admin / student1 / student2

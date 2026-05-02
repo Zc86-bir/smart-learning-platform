@@ -1,0 +1,115 @@
+- generic [ref=e15]:
+  - complementary [ref=e16]:
+    - generic [ref=e17]:
+      - generic [ref=e18]: S
+      - generic [ref=e19]: 智能学习平台
+    - navigation [ref=e20]:
+      - generic [ref=e21]: 概览
+      - button "📊 数据看板" [ref=e22] [cursor=pointer]:
+        - generic [ref=e23]: 📊
+        - generic [ref=e24]: 数据看板
+      - generic [ref=e25]: 出题
+      - button "📝 AI出题" [ref=e26] [cursor=pointer]:
+        - generic [ref=e27]: 📝
+        - generic [ref=e28]: AI出题
+      - button "📋 智能组卷" [ref=e29] [cursor=pointer]:
+        - generic [ref=e30]: 📋
+        - generic [ref=e31]: 智能组卷
+      - generic [ref=e32]: 管理
+      - button "📥 批量导入" [ref=e33] [cursor=pointer]:
+        - generic [ref=e34]: 📥
+        - generic [ref=e35]: 批量导入
+      - button "📚 题库管理 24" [ref=e36] [cursor=pointer]:
+        - generic [ref=e37]: 📚
+        - generic [ref=e38]: 题库管理
+        - generic [ref=e39]: "24"
+      - button "👥 学生管理" [ref=e40] [cursor=pointer]:
+        - generic [ref=e41]: 👥
+        - generic [ref=e42]: 学生管理
+    - generic [ref=e44]:
+      - generic [ref=e45]: 系
+      - generic [ref=e46]:
+        - generic [ref=e47]: 系统管理员
+        - generic [ref=e48]: 管理员
+      - button "退出登录" [ref=e49] [cursor=pointer]:
+        - img [ref=e50]
+  - generic [ref=e53]:
+    - banner [ref=e54]:
+      - heading "批量导入" [level=1] [ref=e185]
+      - generic [ref=e58] [cursor=pointer]:
+        - img [ref=e59]
+        - text: 管理后台
+    - generic [ref=e62]:
+      - generic [ref=e186]:
+        - generic [ref=e188]:
+          - generic [ref=e189]:
+            - generic [ref=e190]: 题库总量
+            - generic [ref=e191]: "24"
+          - img [ref=e193]
+        - generic [ref=e197]:
+          - generic [ref=e198]:
+            - generic [ref=e199]: 试卷数量
+            - generic [ref=e200]: "0"
+          - img [ref=e202]
+        - generic [ref=e206]:
+          - generic [ref=e207]:
+            - generic [ref=e208]: 可用模型
+            - generic [ref=e209]: "3"
+          - img [ref=e211]
+      - generic [ref=e214]:
+        - generic [ref=e216]:
+          - heading "题目批量导入" [level=2] [ref=e217]
+          - paragraph [ref=e218]: 支持 Excel、Word、PDF、TXT 格式的文件上传与解析，也支持图片题目识别（OCR），可直接粘贴截图。单张图片可识别多道题目
+        - generic [ref=e219]:
+          - heading "1. 上传文件" [level=3] [ref=e221]
+          - generic [ref=e222]:
+            - generic [ref=e223]:
+              - generic [ref=e224] [cursor=pointer]:
+                - img [ref=e225]
+                - text: 选择文件
+              - link "下载模板" [active] [ref=e228] [cursor=pointer]:
+                - /url: /api/admin/questions/template
+                - img [ref=e229]
+                - text: 下载模板
+              - generic [ref=e232]: 支持 .xlsx / .docx / .pdf / .txt / .png / .jpg / .webp（可多选）
+            - generic [ref=e234] [cursor=pointer]:
+              - img [ref=e235]
+              - text: 在此页面按 Ctrl+V 粘贴图片，或拖拽文件到此处
+        - generic [ref=e238]:
+          - heading "使用说明" [level=3] [ref=e240]
+          - generic [ref=e242]:
+            - generic [ref=e243]:
+              - heading "📊 Excel 结构化导入" [level=4] [ref=e244]
+              - paragraph [ref=e245]: 首行为表头，支持列名：
+              - generic [ref=e246]:
+                - code [ref=e247]: 题型
+                - text: ·
+                - code [ref=e248]: 分类
+                - text: ·
+                - code [ref=e249]: 题干
+                - text: ·
+                - code [ref=e250]: 选项A/B/C/D
+                - text: ·
+                - code [ref=e251]: 答案
+                - text: ·
+                - code [ref=e252]: 解析
+                - text: ·
+                - code [ref=e253]: 难度
+                - text: ·
+                - code [ref=e254]: 知识点
+            - generic [ref=e255]:
+              - heading "📄 文档 / 图片 AI 识别" [level=4] [ref=e256]
+              - paragraph [ref=e257]: 以下格式将通过 AI 视觉模型智能识别：
+              - generic [ref=e258]:
+                - code [ref=e259]: .docx
+                - text: ·
+                - code [ref=e260]: .pdf
+                - text: ·
+                - code [ref=e261]: .txt
+                - text: ·
+                - code [ref=e262]: .png
+                - text: ·
+                - code [ref=e263]: .jpg
+                - text: ·
+                - code [ref=e264]: .webp
+                - text: PDF 扫描件 / 题目照片均可识别，单张图片自动识别多道题目

@@ -1,0 +1,16 @@
+package com.smartlearn.platform;
+
+import org.mybatis.spring.annotation.MapperScan;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableAsync;
+
+@SpringBootApplication
+@MapperScan("com.smartlearn.platform.mapper")
+@EnableAsync
+public class SmartLearnPlatformApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(SmartLearnPlatformApplication.class, args);
+    }
+}

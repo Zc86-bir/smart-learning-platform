@@ -1,0 +1,118 @@
+- generic [ref=e4]:
+  - complementary [ref=e5]:
+    - generic [ref=e6]:
+      - generic [ref=e7]: S
+      - generic [ref=e8]: 智能学习平台
+    - navigation [ref=e9]:
+      - generic [ref=e10]: 概览
+      - button "📊 数据看板" [ref=e11] [cursor=pointer]:
+        - generic [ref=e12]: 📊
+        - generic [ref=e13]: 数据看板
+      - generic [ref=e14]: 出题
+      - button "📝 AI出题" [ref=e15] [cursor=pointer]:
+        - generic [ref=e16]: 📝
+        - generic [ref=e17]: AI出题
+      - button "📋 智能组卷" [ref=e18] [cursor=pointer]:
+        - generic [ref=e19]: 📋
+        - generic [ref=e20]: 智能组卷
+      - generic [ref=e21]: 管理
+      - button "📥 批量导入" [ref=e22] [cursor=pointer]:
+        - generic [ref=e23]: 📥
+        - generic [ref=e24]: 批量导入
+      - button "📚 题库管理 24" [ref=e25] [cursor=pointer]:
+        - generic [ref=e26]: 📚
+        - generic [ref=e27]: 题库管理
+        - generic [ref=e28]: "24"
+      - button "👥 学生管理" [ref=e29] [cursor=pointer]:
+        - generic [ref=e30]: 👥
+        - generic [ref=e31]: 学生管理
+    - generic [ref=e33]:
+      - generic [ref=e34]: 系
+      - generic [ref=e35]:
+        - generic [ref=e36]: 系统管理员
+        - generic [ref=e37]: 管理员
+      - button "退出登录" [ref=e38] [cursor=pointer]:
+        - img [ref=e39]
+  - generic [ref=e42]:
+    - banner [ref=e43]:
+      - heading "数据看板" [level=1] [ref=e45]
+      - generic [ref=e47] [cursor=pointer]:
+        - img [ref=e48]
+        - text: 管理后台
+    - generic [ref=e52]:
+      - generic [ref=e54]:
+        - heading "数据看板" [level=2] [ref=e55]
+        - paragraph [ref=e56]: 平台运营数据总览
+      - generic [ref=e57]:
+        - generic [ref=e59]:
+          - generic [ref=e60]:
+            - generic [ref=e61]: 学生总数
+            - generic [ref=e62]: "4"
+          - img [ref=e64]
+        - generic [ref=e70]:
+          - generic [ref=e71]:
+            - generic [ref=e72]: 题库总量
+            - generic [ref=e73]: "24"
+          - img [ref=e75]
+        - generic [ref=e79]:
+          - generic [ref=e80]:
+            - generic [ref=e81]: 考试总次数
+            - generic [ref=e82]: "0"
+          - img [ref=e84]
+        - generic [ref=e88]:
+          - generic [ref=e89]:
+            - generic [ref=e90]: 已完成考试
+            - generic [ref=e91]: "0"
+          - img [ref=e93]
+      - generic [ref=e96]:
+        - generic [ref=e97]:
+          - heading "近30天考试趋势" [level=3] [ref=e99]
+          - paragraph [ref=e102]: 暂无数据
+        - generic [ref=e103]:
+          - heading "月度考试统计" [level=3] [ref=e105]
+          - paragraph [ref=e108]: 暂无数据
+      - generic [ref=e109]:
+        - heading "热门试卷排行" [level=3] [ref=e111]
+        - table [ref=e114]:
+          - rowgroup [ref=e115]:
+            - row "排名 试卷 考试次数 平均分 通过率" [ref=e116]:
+              - columnheader "排名" [ref=e117]
+              - columnheader "试卷" [ref=e118]
+              - columnheader "考试次数" [ref=e119]
+              - columnheader "平均分" [ref=e120]
+              - columnheader "通过率" [ref=e121]
+          - rowgroup [ref=e122]:
+            - row "1 Java基础测试 0 0.0% 0%" [ref=e123]:
+              - cell "1" [ref=e124]:
+                - generic [ref=e125]: "1"
+              - cell "Java基础测试" [ref=e126]
+              - cell "0" [ref=e127]
+              - cell "0.0%" [ref=e128]
+              - cell "0%" [ref=e129]:
+                - generic [ref=e130]: 0%
+            - row "2 计算机综合测试 0 0.0% 0%" [ref=e131]:
+              - cell "2" [ref=e132]:
+                - generic [ref=e133]: "2"
+              - cell "计算机综合测试" [ref=e134]
+              - cell "0" [ref=e135]
+              - cell "0.0%" [ref=e136]
+              - cell "0%" [ref=e137]:
+                - generic [ref=e138]: 0%
+      - generic [ref=e139]:
+        - heading "各分类题目数量" [level=3] [ref=e141]
+        - generic [ref=e143]:
+          - generic [ref=e144]:
+            - generic [ref=e145]: 哲学
+            - generic [ref=e149]: "1"
+          - generic [ref=e150]:
+            - generic [ref=e151]: 大学-数据结构
+            - generic [ref=e155]: "3"
+          - generic [ref=e156]:
+            - generic [ref=e157]: 思想政治
+            - generic [ref=e161]: "2"
+          - generic [ref=e162]:
+            - generic [ref=e163]: 政治
+            - generic [ref=e167]: "16"
+          - generic [ref=e168]:
+            - generic [ref=e169]: 法律
+            - generic [ref=e173]: "2"
