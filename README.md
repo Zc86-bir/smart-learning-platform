@@ -15,18 +15,21 @@
 
 ## 快速启动
 
-### 1. 启动基础设施
+### 1. 配置环境变量
+
+复制 `.env.example` 为 `.env` 并填写实际值：
+
+```bash
+cp .env.example .env
+# 编辑 .env 填写数据库密码、JWT密钥等
+```
+
+**注意**：生产环境中所有敏感信息（数据库密码、JWT密钥、API Key）均通过环境变量注入，绝不硬编码在配置文件中。
+
+### 2. 启动基础设施
 
 ```bash
 docker compose up -d
-```
-
-### 2. 设置 API Key
-
-编辑 `.env` 文件，确保 `MIMO_API_KEY` 已配置：
-
-```
-MIMO_API_KEY=your-api-key-here
 ```
 
 ### 3. 启动应用
@@ -35,7 +38,19 @@ MIMO_API_KEY=your-api-key-here
 mvn spring-boot:run
 ```
 
-访问 Swagger UI: http://localhost:8080/swagger-ui.html
+访问 Swagger UI: http://localhost:9090/swagger-ui.html
+
+### 环境变量说明
+
+| 变量 | 说明 | 默认值 |
+|------|------|--------|
+| `DB_URL` | 数据库连接URL | `jdbc:mysql://localhost:3306/smart_learning...` |
+| `DB_USERNAME` | 数据库用户名 | `root` |
+| `DB_PASSWORD` | 数据库密码 | 无 |
+| `REDIS_HOST` | Redis 地址 | `localhost` |
+| `REDIS_PASSWORD` | Redis 密码 | 无 |
+| `JWT_SECRET` | JWT 签名密钥 | 无 |
+| `MIMO_API_KEY` | MiMo AI API Key | 无 |
 
 ## 项目结构
 

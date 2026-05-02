@@ -33,9 +33,9 @@ spring:
             user-name-attribute: openid
 
   datasource:
-    url: jdbc:mysql://localhost:3306/smart_learning?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
-    username: root
-    password: 'tBYdA6c@S4T9RmW#^ZKR'
+    url: ${DB_URL:jdbc:mysql://localhost:3306/smart_learning?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:}
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       maximum-pool-size: 20
@@ -46,10 +46,10 @@ spring:
 
   data:
     redis:
-      host: localhost
-      port: 6379
-      password:
-      database: 0
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: ${REDIS_DATABASE:0}
       timeout: 5000ms
       lettuce:
         pool:
@@ -127,6 +127,6 @@ management:
 # JWT Configuration
 app:
   jwt:
-    secret: ${JWT_SECRET:Y2hhbmdlLXRoaXMtdG8tYS1sb25nLXNlY3JldC1rZXktaW4tcHJvZHVjdGlvbi1lbnZpcm9ubWVudA==}
+    secret: ${JWT_SECRET}
     expiration-ms: ${JWT_EXPIRATION_MS:86400000} # 24 hours
     refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:604800000} # 7 days
