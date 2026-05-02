@@ -1,0 +1,150 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # ========== 阶段1: 构建与测试 ==========
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 24
+        uses: actions/setup-java@v4
+        with:
+          java-version: '24'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build with Maven
+        run: mvn clean package -DskipTests -q
+
+      - name: Run tests
+        run: mvn test -q
+
+      - name: Upload JAR artifact
+        uses: actions/upload-artifact@v4
+        if: github.event_name == 'push'
+        with:
+          name: app-jar
+          path: target/*.jar
+          retention-days: 1
+
+  # ========== 阶段2: Docker 构建 ==========
+  docker:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download JAR artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: app-jar
+          path: target/
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha,prefix=
+            type=ref,event=branch
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ========== 阶段3: 部署到服务器 ==========
+  deploy:
+    needs: docker
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USERNAME }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            set -e
+
+            echo "=== Pulling latest code ==="
+            cd ~/smart-learn || mkdir -p ~/smart-learn && cd ~/smart-learn
+
+            if [ -d ".git" ]; then
+              git pull origin master
+            else
+              git clone git@github.com:${{ github.repository }}.git .
+              git checkout master
+            fi
+
+            echo "=== Stopping old containers ==="
+            docker compose -f docker-compose.prod.yml down --remove-orphans 2>/dev/null || true
+
+            echo "=== Pulling latest Docker image ==="
+            docker compose -f docker-compose.prod.yml pull 2>/dev/null || true
+
+            echo "=== Starting services ==="
+            docker compose -f docker-compose.prod.yml up -d --build
+
+            echo "=== Waiting for app to be healthy ==="
+            for i in $(seq 1 30); do
+              if docker compose -f docker-compose.prod.yml ps | grep -q "healthy"; then
+                echo "App is healthy!"
+                break
+              fi
+              sleep 2
+            done
+
+            echo "=== Deployment complete ==="
+            docker compose -f docker-compose.prod.yml ps
+
+      - name: Verify deployment
+        run: |
+          echo "Deployment finished. Check server logs for details."

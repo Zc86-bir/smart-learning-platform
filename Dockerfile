@@ -1,17 +1,13 @@
-# Build stage
-FROM maven:3.9-eclipse-temurin-24 AS builder
-WORKDIR /app
-COPY pom.xml .
-COPY src ./src
-RUN mvn package -DskipTests -q
-
-# Run stage
 FROM eclipse-temurin:24-jre
 WORKDIR /app
-COPY --from=builder /app/target/*.jar app.jar
-COPY --from=builder /app/target/lib ./lib
+
+ARG JAR_FILE=target/*.jar
+COPY ${JAR_FILE} app.jar
 
 EXPOSE 9090
+
+HEALTHCHECK --interval=15s --timeout=5s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:9090/actuator/health || exit 1
 
 ENTRYPOINT ["java", \
     "-XX:+UseZGC", \
