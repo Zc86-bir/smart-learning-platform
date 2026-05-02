@@ -16,12 +16,23 @@ public interface UserMapper extends BaseMapper<User> {
                COALESCE(MAX(e.submit_time), u.created_at) as lastActiveTime
         FROM users u
         LEFT JOIN exam_records e ON u.id = e.user_id
-        WHERE u.role = 'STUDENT' AND u.deleted = 0
+        WHERE u.id IN (
+            SELECT ur.user_id FROM sys_user_role ur
+            JOIN sys_role r ON ur.role_id = r.id
+            WHERE r.code = 'STUDENT' AND ur.deleted = 0
+        ) AND u.deleted = 0
         GROUP BY u.id
         ORDER BY u.created_at DESC
         """)
     List<java.util.Map<String, Object>> findStudentsWithStats();
 
-    @Select("SELECT COUNT(*) FROM users WHERE role = 'STUDENT' AND deleted = 0")
+    @Select("""
+        SELECT COUNT(*) FROM users u
+        WHERE u.id IN (
+            SELECT ur.user_id FROM sys_user_role ur
+            JOIN sys_role r ON ur.role_id = r.id
+            WHERE r.code = 'STUDENT' AND ur.deleted = 0
+        ) AND u.deleted = 0
+        """)
     long countStudents();
 }

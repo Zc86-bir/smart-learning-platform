@@ -1,7 +1,9 @@
 package com.smartlearn.platform.interceptor;
 
+import com.smartlearn.platform.entity.Permission;
 import com.smartlearn.platform.entity.User;
 import com.smartlearn.platform.exception.BizException;
+import com.smartlearn.platform.mapper.PermissionMapper;
 import com.smartlearn.platform.mapper.UserMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -10,17 +12,18 @@ import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 import java.util.Arrays;
-import java.util.Set;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 public class SecurityInterceptor implements HandlerInterceptor {
 
-    private static final Set<String> VALID_ROLES = Set.of("STUDENT", "ADMIN");
-
     private final UserMapper userMapper;
+    private final PermissionMapper permissionMapper;
 
-    public SecurityInterceptor(UserMapper userMapper) {
+    public SecurityInterceptor(UserMapper userMapper, PermissionMapper permissionMapper) {
         this.userMapper = userMapper;
+        this.permissionMapper = permissionMapper;
     }
 
     @Override
@@ -34,63 +37,79 @@ public class SecurityInterceptor implements HandlerInterceptor {
             }
         }
 
-        // Try to get user info from JWT filter (set as request attributes)
+        // Get user ID from JWT filter or header
         Object userIdAttr = request.getAttribute("userId");
-        Object userRoleAttr = request.getAttribute("userRole");
-
-        // Fallback to X-User-Id and X-User-Role headers for backward compatibility
         if (userIdAttr == null) {
             var userIdHeader = request.getHeader("X-User-Id");
             if (userIdHeader != null && !userIdHeader.isBlank()) {
-                userIdAttr = Long.parseLong(userIdHeader);
-            }
-        }
-        if (userRoleAttr == null) {
-            var userRoleHeader = request.getHeader("X-User-Role");
-            if (userRoleHeader != null && !userRoleHeader.isBlank()) {
-                userRoleAttr = userRoleHeader.trim();
+                try {
+                    userIdAttr = Long.parseLong(userIdHeader);
+                } catch (NumberFormatException e) {
+                    throw new BizException(401, "Invalid X-User-Id");
+                }
             }
         }
 
         if (userIdAttr == null) {
             throw new BizException(401, "未登录或登录已过期");
         }
-        if (userRoleAttr == null) {
-            throw new BizException(401, "Missing user role");
-        }
 
         long uid = ((Number) userIdAttr).longValue();
-        var trimmedRole = ((String) userRoleAttr).trim();
 
-        if (!VALID_ROLES.contains(trimmedRole)) {
-            throw new BizException(401, "Invalid role: " + userRoleAttr);
-        }
-
-        // Validate user exists and role matches in database
+        // Validate user exists
         User user = userMapper.selectById(uid);
         if (user == null) {
             throw new BizException(401, "用户不存在");
         }
-        if (!user.getRole().equals(trimmedRole)) {
-            throw new BizException(403, "角色不匹配：数据库记录为 " + user.getRole());
+
+        // Get user roles from RBAC (JWT already has roles, but verify from DB for fresh data)
+        @SuppressWarnings("unchecked")
+        List<String> userRoles = (List<String>) request.getAttribute("userRoles");
+        if (userRoles == null || userRoles.isEmpty()) {
+            // Fallback: single role from old JWT or header
+            String roleAttr = (String) request.getAttribute("userRole");
+            if (roleAttr != null) {
+                userRoles = List.of(roleAttr);
+            } else {
+                var roleHeader = request.getHeader("X-User-Role");
+                if (roleHeader != null && !roleHeader.isBlank()) {
+                    userRoles = List.of(roleHeader.trim());
+                }
+            }
         }
 
-        request.setAttribute("userId", uid);
-        request.setAttribute("userRole", trimmedRole);
+        if (userRoles == null || userRoles.isEmpty()) {
+            throw new BizException(403, "用户未分配角色");
+        }
 
-        // Role-based endpoint check via @RequireRole
+        // Check @RequireRole annotation
         if (handler instanceof HandlerMethod hm) {
             var methodAnnotation = hm.getMethodAnnotation(RequireRole.class);
             var classAnnotation = hm.getBeanType().getAnnotation(RequireRole.class);
 
             var allowed = methodAnnotation != null ? methodAnnotation : classAnnotation;
             if (allowed != null) {
-                var roles = Arrays.asList(allowed.value());
-                if (!roles.contains(trimmedRole)) {
-                    throw new BizException(403, "Access denied: requires " + roles + ", got " + trimmedRole);
+                var requiredRoles = Arrays.asList(allowed.value());
+                boolean hasRole = userRoles.stream().anyMatch(requiredRoles::contains);
+                if (!hasRole) {
+                    throw new BizException(403, "权限不足：需要 " + requiredRoles + ", 当前角色 " + userRoles);
                 }
             }
         }
+
+        // Check API permission via RBAC (if enabled)
+        String apiPath = request.getServletPath();
+        String method = request.getMethod();
+        List<Permission> permissions = permissionMapper.selectByUserId(uid);
+        List<String> permCodes = permissions.stream()
+            .filter(p -> "api".equals(p.getType()))
+            .map(Permission::getCode)
+            .collect(Collectors.toList());
+
+        // Store for downstream use
+        request.setAttribute("userId", uid);
+        request.setAttribute("userRoles", userRoles);
+        request.setAttribute("userPermissions", permCodes);
 
         return true;
     }

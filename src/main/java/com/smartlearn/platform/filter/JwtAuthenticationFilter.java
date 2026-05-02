@@ -33,9 +33,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String userId = claims.getSubject();
                 String username = claims.get("username", String.class);
                 String role = claims.get("role", String.class);
+                @SuppressWarnings("unchecked")
+                java.util.List<String> roles = claims.get("roles", java.util.List.class);
 
                 request.setAttribute("userId", Long.parseLong(userId));
                 request.setAttribute("userRole", role);
+                request.setAttribute("userRoles", roles != null ? roles : java.util.List.of(role));
                 // Also set X-User-Id and X-User-Role for backward compatibility with SecurityInterceptor
                 request.setAttribute("X-User-Id", userId);
                 request.setAttribute("X-User-Role", role);

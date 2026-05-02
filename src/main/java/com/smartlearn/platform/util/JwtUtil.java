@@ -20,10 +20,15 @@ public class JwtUtil {
     }
 
     public String generateToken(Long userId, String username, String role) {
+        return generateToken(userId, username, role, java.util.List.of(role));
+    }
+
+    public String generateToken(Long userId, String username, String role, java.util.List<String> roles) {
         return Jwts.builder()
             .subject(String.valueOf(userId))
             .claim("username", username)
             .claim("role", role)
+            .claim("roles", roles)
             .issuedAt(new Date())
             .expiration(new Date(System.currentTimeMillis() + expirationMs))
             .signWith(key)

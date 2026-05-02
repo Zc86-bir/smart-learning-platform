@@ -24,6 +24,67 @@ CREATE TABLE IF NOT EXISTS users (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ==========================================
+-- RBAC: Roles (角色表)
+-- ==========================================
+CREATE TABLE IF NOT EXISTS sys_role (
+    id              BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name            VARCHAR(64)  NOT NULL COMMENT '角色名称',
+    code            VARCHAR(64)  NOT NULL UNIQUE COMMENT '角色编码',
+    description     VARCHAR(256) DEFAULT NULL,
+    sort            INT          NOT NULL DEFAULT 0,
+    status          TINYINT      NOT NULL DEFAULT 1 COMMENT '1=启用 0=禁用',
+    created_at      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted         TINYINT      NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ==========================================
+-- RBAC: Permissions (权限/菜单表)
+-- ==========================================
+CREATE TABLE IF NOT EXISTS sys_permission (
+    id              BIGINT AUTO_INCREMENT PRIMARY KEY,
+    parent_id       BIGINT       DEFAULT 0 COMMENT '父级ID, 0为顶级',
+    name            VARCHAR(64)  NOT NULL COMMENT '权限名称',
+    code            VARCHAR(128) NOT NULL UNIQUE COMMENT '权限编码',
+    type            VARCHAR(16)  NOT NULL DEFAULT 'menu' COMMENT 'menu/button/api',
+    path            VARCHAR(256) DEFAULT NULL COMMENT '前端路由',
+    api_path        VARCHAR(256) DEFAULT NULL COMMENT 'API路径',
+    method          VARCHAR(8)   DEFAULT NULL COMMENT 'GET/POST/PUT/DELETE',
+    sort            INT          NOT NULL DEFAULT 0,
+    status          TINYINT      NOT NULL DEFAULT 1,
+    created_at      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted         TINYINT      NOT NULL DEFAULT 0,
+    INDEX idx_parent_id (parent_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ==========================================
+-- RBAC: User-Role (用户-角色关联表)
+-- ==========================================
+CREATE TABLE IF NOT EXISTS sys_user_role (
+    id              BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id         BIGINT       NOT NULL,
+    role_id         BIGINT       NOT NULL,
+    created_at      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted         TINYINT      NOT NULL DEFAULT 0,
+    UNIQUE KEY uk_user_role (user_id, role_id),
+    INDEX idx_role_id (role_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ==========================================
+-- RBAC: Role-Permission (角色-权限关联表)
+-- ==========================================
+CREATE TABLE IF NOT EXISTS sys_role_permission (
+    id              BIGINT AUTO_INCREMENT PRIMARY KEY,
+    role_id         BIGINT       NOT NULL,
+    permission_id   BIGINT       NOT NULL,
+    created_at      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted         TINYINT      NOT NULL DEFAULT 0,
+    UNIQUE KEY uk_role_permission (role_id, permission_id),
+    INDEX idx_permission_id (permission_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ==========================================
 -- OAuth2 User Bindings (单点登录绑定)
 -- ==========================================
 CREATE TABLE IF NOT EXISTS oauth2_user_binding (
@@ -230,6 +291,117 @@ INSERT INTO users (id, username, password, nickname, email, role) VALUES
 (4, 'student3', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIUi', '王五', 'student3@smartlearn.com', 'STUDENT'),
 (5, 'student4', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIUi', '赵六', 'student4@smartlearn.com', 'STUDENT')
     ON DUPLICATE KEY UPDATE username=VALUES(username);
+
+-- ==========================================
+-- Seed: RBAC Roles
+-- ==========================================
+INSERT INTO sys_role (id, name, code, description, sort, status) VALUES
+(1, '超级管理员', 'SUPER_ADMIN', '拥有所有权限', 1, 1),
+(2, '系统管理员', 'ADMIN', '管理题库、试卷、用户等', 2, 1),
+(3, '教师', 'TEACHER', '出题、组卷、判卷', 3, 1),
+(4, '学生', 'STUDENT', '学习、考试、查看错题', 4, 1)
+    ON DUPLICATE KEY UPDATE name=VALUES(name);
+
+-- ==========================================
+-- Seed: RBAC Permissions (菜单+按钮+API)
+-- ==========================================
+-- 一级菜单
+INSERT INTO sys_permission (id, parent_id, name, code, type, path, api_path, method, sort, status) VALUES
+(1, 0, '仪表盘', 'dashboard', 'menu', '/dashboard', NULL, NULL, 1, 1),
+(2, 0, '题库管理', 'question', 'menu', '/questions', NULL, NULL, 2, 1),
+(3, 0, '试卷管理', 'paper', 'menu', '/papers', NULL, NULL, 3, 1),
+(4, 0, '考试管理', 'exam', 'menu', '/exams', NULL, NULL, 4, 1),
+(5, 0, '视频管理', 'video', 'menu', '/videos', NULL, NULL, 5, 1),
+(6, 0, '用户管理', 'user', 'menu', '/users', NULL, NULL, 6, 1),
+(7, 0, '系统设置', 'system', 'menu', '/system', NULL, NULL, 7, 1),
+(8, 0, '错题本', 'wrong-question', 'menu', '/wrong-questions', NULL, NULL, 8, 1),
+(9, 0, 'AI助教', 'ai-tutor', 'menu', '/ai-tutor', NULL, NULL, 9, 1),
+
+-- 题库管理子权限
+(10, 2, '查看题目', 'question:view', 'button', NULL, '/api/admin/questions', 'GET', 1, 1),
+(11, 2, '新增题目', 'question:create', 'button', NULL, '/api/admin/questions', 'POST', 2, 1),
+(12, 2, '编辑题目', 'question:update', 'button', NULL, '/api/admin/questions/*', 'PUT', 3, 1),
+(13, 2, '删除题目', 'question:delete', 'button', NULL, '/api/admin/questions/*', 'DELETE', 4, 1),
+(14, 2, 'AI出题', 'question:ai-generate', 'button', NULL, '/api/admin/questions/generate', 'POST', 5, 1),
+(15, 2, '批量导入', 'question:import', 'button', NULL, '/api/admin/questions/import', 'POST', 6, 1),
+
+-- 试卷管理子权限
+(16, 3, '查看试卷', 'paper:view', 'button', NULL, '/api/admin/papers', 'GET', 1, 1),
+(17, 3, '创建试卷', 'paper:create', 'button', NULL, '/api/admin/papers', 'POST', 2, 1),
+(18, 3, '编辑试卷', 'paper:update', 'button', NULL, '/api/admin/papers/*', 'PUT', 3, 1),
+(19, 3, '删除试卷', 'paper:delete', 'button', NULL, '/api/admin/papers/*', 'DELETE', 4, 1),
+
+-- 视频管理子权限
+(20, 5, '查看视频', 'video:view', 'button', NULL, '/api/admin/videos', 'GET', 1, 1),
+(21, 5, '审核视频', 'video:review', 'button', NULL, '/api/admin/videos/*/review', 'PUT', 2, 1),
+(22, 5, '删除视频', 'video:delete', 'button', NULL, '/api/admin/videos/*', 'DELETE', 3, 1),
+
+-- 用户管理子权限
+(23, 6, '查看用户', 'user:view', 'button', NULL, '/api/admin/users', 'GET', 1, 1),
+(24, 6, '编辑用户', 'user:update', 'button', NULL, '/api/admin/users/*', 'PUT', 2, 1),
+(25, 6, '禁用用户', 'user:disable', 'button', NULL, '/api/admin/users/*/status', 'PUT', 3, 1),
+(26, 6, '角色分配', 'user:role-assign', 'button', NULL, '/api/admin/users/*/roles', 'POST', 4, 1),
+
+-- 系统设置子权限
+(27, 7, '轮播图管理', 'banner:manage', 'button', NULL, '/api/admin/banners', 'GET', 1, 1),
+(28, 7, '分类管理', 'category:manage', 'button', NULL, '/api/admin/categories', 'GET', 2, 1),
+(29, 7, 'AI用量统计', 'ai-usage:view', 'button', NULL, '/api/admin/ai-usage', 'GET', 3, 1),
+
+-- 学生端权限
+(30, 4, '参加考试', 'exam:take', 'button', NULL, '/api/student/exams', 'GET', 1, 1),
+(31, 4, '提交答卷', 'exam:submit', 'button', NULL, '/api/student/exams/submit', 'POST', 2, 1),
+(32, 4, '查看成绩', 'exam:score-view', 'button', NULL, '/api/student/exams/*/report', 'GET', 3, 1),
+(33, 8, '查看错题', 'wrong-question:view', 'button', NULL, '/api/student/wrong-questions', 'GET', 1, 1),
+(34, 8, '错题练习', 'wrong-question:practice', 'button', NULL, '/api/student/wrong-questions/practice', 'GET', 2, 1),
+(35, 9, 'AI答疑', 'ai-tutor:ask', 'button', NULL, '/api/student/ai-tutor', 'POST', 1, 1)
+    ON DUPLICATE KEY UPDATE name=VALUES(name);
+
+-- ==========================================
+-- Seed: User-Role Bindings
+-- ==========================================
+INSERT INTO sys_user_role (user_id, role_id) VALUES
+(1, 1), -- admin -> SUPER_ADMIN
+(1, 2), -- admin -> ADMIN
+(2, 4), -- student1 -> STUDENT
+(3, 4), -- student2 -> STUDENT
+(4, 4), -- student3 -> STUDENT
+(5, 4)  -- student4 -> STUDENT
+    ON DUPLICATE KEY UPDATE user_id=VALUES(user_id);
+
+-- ==========================================
+-- Seed: Role-Permission Bindings
+-- ==========================================
+-- SUPER_ADMIN 拥有所有权限
+INSERT INTO sys_role_permission (role_id, permission_id)
+SELECT 1, id FROM sys_permission WHERE deleted = 0
+    ON DUPLICATE KEY UPDATE role_id=VALUES(role_id);
+
+-- ADMIN 拥有管理权限（除了超级管理员专属）
+INSERT INTO sys_role_permission (role_id, permission_id) VALUES
+(2, 1), (2, 2), (2, 3), (2, 4), (2, 5), (2, 6), (2, 7),
+(2, 10), (2, 11), (2, 12), (2, 13), (2, 14), (2, 15),
+(2, 16), (2, 17), (2, 18), (2, 19),
+(2, 20), (2, 21), (2, 22),
+(2, 23), (2, 24), (2, 25),
+(2, 27), (2, 28), (2, 29)
+    ON DUPLICATE KEY UPDATE role_id=VALUES(role_id);
+
+-- TEACHER 拥有教学相关权限
+INSERT INTO sys_role_permission (role_id, permission_id) VALUES
+(3, 1), (3, 2), (3, 3), (3, 4), (3, 5), (3, 8), (3, 9),
+(3, 10), (3, 11), (3, 12), (3, 14), (3, 15),
+(3, 16), (3, 17), (3, 18),
+(3, 20),
+(3, 33), (3, 34), (3, 35)
+    ON DUPLICATE KEY UPDATE role_id=VALUES(role_id);
+
+-- STUDENT 拥有学习相关权限
+INSERT INTO sys_role_permission (role_id, permission_id) VALUES
+(4, 1), (4, 4), (4, 5), (4, 8), (4, 9),
+(4, 30), (4, 31), (4, 32),
+(4, 33), (4, 34),
+(4, 35)
+    ON DUPLICATE KEY UPDATE role_id=VALUES(role_id);
 
 -- ==========================================
 -- Seed: Questions

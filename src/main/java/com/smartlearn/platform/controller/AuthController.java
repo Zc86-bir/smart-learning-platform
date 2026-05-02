@@ -1,9 +1,13 @@
 package com.smartlearn.platform.controller;
 
 import com.smartlearn.platform.dto.ApiResponse;
+import com.smartlearn.platform.entity.Role;
 import com.smartlearn.platform.entity.User;
+import com.smartlearn.platform.entity.UserRole;
 import com.smartlearn.platform.exception.BizException;
+import com.smartlearn.platform.mapper.RoleMapper;
 import com.smartlearn.platform.mapper.UserMapper;
+import com.smartlearn.platform.mapper.UserRoleMapper;
 import com.smartlearn.platform.util.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -11,7 +15,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -19,11 +25,16 @@ import java.util.Map;
 public class AuthController {
 
     private final UserMapper userMapper;
+    private final RoleMapper roleMapper;
+    private final UserRoleMapper userRoleMapper;
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
-    public AuthController(UserMapper userMapper, JwtUtil jwtUtil) {
+    public AuthController(UserMapper userMapper, RoleMapper roleMapper,
+                          UserRoleMapper userRoleMapper, JwtUtil jwtUtil) {
         this.userMapper = userMapper;
+        this.roleMapper = roleMapper;
+        this.userRoleMapper = userRoleMapper;
         this.jwtUtil = jwtUtil;
     }
 
@@ -52,13 +63,23 @@ public class AuthController {
             throw new BizException(401, "用户名或密码错误");
         }
 
-        String token = jwtUtil.generateToken(user.getId(), user.getUsername(), user.getRole());
+        // 通过 RBAC 获取用户角色
+        List<Role> roles = roleMapper.selectByUserId(user.getId());
+        List<String> roleCodes = roles.stream()
+            .map(Role::getCode)
+            .collect(Collectors.toList());
+
+        // 取第一个角色作为主要角色（向后兼容）
+        String primaryRole = roleCodes.isEmpty() ? "STUDENT" : roleCodes.get(0);
+
+        String token = jwtUtil.generateToken(user.getId(), user.getUsername(), primaryRole, roleCodes);
 
         return ApiResponse.ok(Map.of(
             "id", user.getId(),
             "username", user.getUsername(),
             "nickname", user.getNickname(),
-            "role", user.getRole(),
+            "roles", roleCodes,
+            "role", primaryRole,
             "token", token
         ));
     }
@@ -90,17 +111,29 @@ public class AuthController {
         newUser.setUsername(username.trim());
         newUser.setPassword(passwordEncoder.encode(password));
         newUser.setNickname(nickname != null && !nickname.isBlank() ? nickname : username);
-        newUser.setRole("STUDENT");
+        newUser.setStatus(1);
 
         userMapper.insert(newUser);
 
-        String token = jwtUtil.generateToken(newUser.getId(), newUser.getUsername(), newUser.getRole());
+        // 默认分配学生角色
+        Role studentRole = roleMapper.selectOne(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Role>()
+            .eq(Role::getCode, "STUDENT")
+        );
+        if (studentRole != null) {
+            UserRole ur = new UserRole();
+            ur.setUserId(newUser.getId());
+            ur.setRoleId(studentRole.getId());
+            userRoleMapper.insert(ur);
+        }
+
+        String token = jwtUtil.generateToken(newUser.getId(), newUser.getUsername(), "STUDENT", List.of("STUDENT"));
 
         return ApiResponse.ok(Map.of(
             "id", newUser.getId(),
             "username", newUser.getUsername(),
             "nickname", newUser.getNickname(),
-            "role", newUser.getRole(),
+            "roles", List.of("STUDENT"),
+            "role", "STUDENT",
             "token", token
         ));
     }
