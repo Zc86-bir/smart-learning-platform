@@ -34,27 +34,36 @@ public class SecurityInterceptor implements HandlerInterceptor {
             }
         }
 
-        var userId = request.getHeader("X-User-Id");
-        var userRole = request.getHeader("X-User-Role");
+        // Try to get user info from JWT filter (set as request attributes)
+        Object userIdAttr = request.getAttribute("userId");
+        Object userRoleAttr = request.getAttribute("userRole");
 
-        if (userId == null || userId.isBlank()) {
-            throw new BizException(401, "Missing X-User-Id header");
+        // Fallback to X-User-Id and X-User-Role headers for backward compatibility
+        if (userIdAttr == null) {
+            var userIdHeader = request.getHeader("X-User-Id");
+            if (userIdHeader != null && !userIdHeader.isBlank()) {
+                userIdAttr = Long.parseLong(userIdHeader);
+            }
         }
-        if (userRole == null || userRole.isBlank()) {
-            throw new BizException(401, "Missing X-User-Role header");
+        if (userRoleAttr == null) {
+            var userRoleHeader = request.getHeader("X-User-Role");
+            if (userRoleHeader != null && !userRoleHeader.isBlank()) {
+                userRoleAttr = userRoleHeader.trim();
+            }
         }
 
-        // Parse userId eagerly to catch invalid values early
-        long uid;
-        try {
-            uid = Long.parseLong(userId);
-        } catch (NumberFormatException e) {
-            throw new BizException(401, "Invalid X-User-Id: must be a number");
+        if (userIdAttr == null) {
+            throw new BizException(401, "未登录或登录已过期");
+        }
+        if (userRoleAttr == null) {
+            throw new BizException(401, "Missing user role");
         }
 
-        var trimmedRole = userRole.trim();
+        long uid = ((Number) userIdAttr).longValue();
+        var trimmedRole = ((String) userRoleAttr).trim();
+
         if (!VALID_ROLES.contains(trimmedRole)) {
-            throw new BizException(401, "Invalid role: " + userRole);
+            throw new BizException(401, "Invalid role: " + userRoleAttr);
         }
 
         // Validate user exists and role matches in database

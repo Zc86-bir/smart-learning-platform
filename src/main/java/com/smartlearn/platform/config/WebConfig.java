@@ -1,6 +1,9 @@
 package com.smartlearn.platform.config;
 
+import com.smartlearn.platform.filter.JwtAuthenticationFilter;
 import com.smartlearn.platform.interceptor.SecurityInterceptor;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
@@ -13,10 +16,21 @@ public class WebConfig implements WebMvcConfigurer {
 
     private final SecurityInterceptor securityInterceptor;
     private final RateLimitInterceptor rateLimitInterceptor;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    public WebConfig(SecurityInterceptor securityInterceptor, RateLimitInterceptor rateLimitInterceptor) {
+    public WebConfig(SecurityInterceptor securityInterceptor, RateLimitInterceptor rateLimitInterceptor, JwtAuthenticationFilter jwtAuthenticationFilter) {
         this.securityInterceptor = securityInterceptor;
         this.rateLimitInterceptor = rateLimitInterceptor;
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+    }
+
+    @Bean
+    public FilterRegistrationBean<JwtAuthenticationFilter> jwtFilterRegistration() {
+        FilterRegistrationBean<JwtAuthenticationFilter> registration = new FilterRegistrationBean<>();
+        registration.setFilter(jwtAuthenticationFilter);
+        registration.addUrlPatterns("/api/*");
+        registration.setOrder(1);
+        return registration;
     }
 
     @Override

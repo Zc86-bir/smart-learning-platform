@@ -1,6 +1,12 @@
 {
   "version": "1.0",
-  "timestamp": 1777367235833,
+  "timestamp": 1777692834532,
   "projectRoot": "e:\\java_test\\智能学习平台",
-  "entries": []
+  "entries": [
+    {
+      "path": "target\\classes\\com\\smartlearn\\platform\\SmartLearnPlatformApplication.class",
+      "mtime": 1777692256056.944,
+      "size": 949
+    }
+  ]
 }

@@ -13,6 +13,7 @@ USE smart_learn;
 CREATE TABLE IF NOT EXISTS users (
     id              BIGINT AUTO_INCREMENT PRIMARY KEY,
     username        VARCHAR(64)  NOT NULL UNIQUE,
+    password        VARCHAR(128) NOT NULL,
     nickname        VARCHAR(64)  NOT NULL,
     email           VARCHAR(128) DEFAULT NULL,
     avatar          VARCHAR(256) DEFAULT NULL,
@@ -20,6 +21,20 @@ CREATE TABLE IF NOT EXISTS users (
     created_at      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted         TINYINT      NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ==========================================
+-- OAuth2 User Bindings (单点登录绑定)
+-- ==========================================
+CREATE TABLE IF NOT EXISTS oauth2_user_binding (
+    id                  BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id             BIGINT       NOT NULL,
+    provider            VARCHAR(32)  NOT NULL COMMENT 'github/wechat/google',
+    provider_user_id    VARCHAR(128) NOT NULL COMMENT '第三方平台的用户ID',
+    created_at          DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at          DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_provider_user (provider, provider_user_id),
+    INDEX idx_user_id (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ==========================================
@@ -208,12 +223,12 @@ INSERT INTO categories (name, sort_order) VALUES
 -- ==========================================
 -- Seed: Users
 -- ==========================================
-INSERT INTO users (id, username, nickname, email, role) VALUES
-(1, 'admin', '系统管理员', 'admin@smartlearn.com', 'ADMIN'),
-(2, 'student1', '张三', 'student1@smartlearn.com', 'STUDENT'),
-(3, 'student2', '李四', 'student2@smartlearn.com', 'STUDENT'),
-(4, 'student3', '王五', 'student3@smartlearn.com', 'STUDENT'),
-(5, 'student4', '赵六', 'student4@smartlearn.com', 'STUDENT')
+INSERT INTO users (id, username, password, nickname, email, role) VALUES
+(1, 'admin', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIUi', '系统管理员', 'admin@smartlearn.com', 'ADMIN'),
+(2, 'student1', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIUi', '张三', 'student1@smartlearn.com', 'STUDENT'),
+(3, 'student2', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIUi', '李四', 'student2@smartlearn.com', 'STUDENT'),
+(4, 'student3', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIUi', '王五', 'student3@smartlearn.com', 'STUDENT'),
+(5, 'student4', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIUi', '赵六', 'student4@smartlearn.com', 'STUDENT')
     ON DUPLICATE KEY UPDATE username=VALUES(username);
 
 -- ==========================================

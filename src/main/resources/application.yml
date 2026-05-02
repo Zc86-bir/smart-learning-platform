@@ -7,6 +7,31 @@ spring:
   application:
     name: smart-learn-platform
 
+  # OAuth2 Client Configuration
+  security:
+    oauth2:
+      client:
+        registration:
+          # GitHub OAuth2
+          github:
+            client-id: ${OAUTH2_GITHUB_CLIENT_ID:}
+            client-secret: ${OAUTH2_GITHUB_CLIENT_SECRET:}
+            scope: read:user,user:email
+          # WeChat (example, needs custom provider)
+          wechat:
+            client-id: ${OAUTH2_WECHAT_CLIENT_ID:}
+            client-secret: ${OAUTH2_WECHAT_CLIENT_SECRET:}
+            client-name: 微信登录
+            authorization-grant-type: authorization_code
+            redirect-uri: "{baseUrl}/login/oauth2/code/wechat"
+            scope: snsapi_login
+        provider:
+          wechat:
+            authorization-uri: https://open.weixin.qq.com/connect/qrconnect
+            token-uri: https://api.weixin.qq.com/sns/oauth2/access_token
+            user-info-uri: https://api.weixin.qq.com/sns/userinfo
+            user-name-attribute: openid
+
   datasource:
     url: jdbc:mysql://localhost:3306/smart_learning?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: root
@@ -98,3 +123,10 @@ management:
   endpoint:
     health:
       show-details: when_authorized
+
+# JWT Configuration
+app:
+  jwt:
+    secret: ${JWT_SECRET:Y2hhbmdlLXRoaXMtdG8tYS1sb25nLXNlY3JldC1rZXktaW4tcHJvZHVjdGlvbi1lbnZpcm9ubWVudA==}
+    expiration-ms: ${JWT_EXPIRATION_MS:86400000} # 24 hours
+    refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:604800000} # 7 days

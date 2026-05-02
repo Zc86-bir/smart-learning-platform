@@ -68,7 +68,46 @@ src/main/java/com/smartlearn/platform/
 
 ### 认证方式
 
-所有 `/api/**` 接口需要通过 Header 注入用户身份：
+项目支持两种认证方式：
+
+#### 1. JWT Token 认证（推荐）
+
+登录成功后使用 Bearer Token：
+
+```
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+**登录接口：**
+
+```bash
+curl -X POST http://localhost:9090/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "admin",
+    "password": "123456"
+  }'
+```
+
+**注册接口：**
+
+```bash
+curl -X POST http://localhost:9090/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "newuser",
+    "password": "123456",
+    "nickname": "新用户"
+  }'
+```
+
+#### 2. OAuth2 单点登录
+
+支持 GitHub、微信等第三方登录。访问 `/oauth2/authorization/github` 开始 GitHub 登录流程。
+
+#### 3. Header 注入（向后兼容）
+
+旧版开发环境仍支持 Header 注入：
 
 ```
 X-User-Id: 1
