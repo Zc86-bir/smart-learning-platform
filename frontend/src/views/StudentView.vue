@@ -9,6 +9,7 @@ import KnowledgeMastery from './KnowledgeMastery.vue'
 import Dashboard from './Dashboard.vue'
 import TutorView from './TutorView.vue'
 import LeaderboardView from './LeaderboardView.vue'
+import VideoListView from './VideoListView.vue'
 
 const { nickname, userRole, logout } = useAuth()
 const router = useRouter()
@@ -18,6 +19,7 @@ const navItems = [
   { id: 'dashboard', label: '学习看板', icon: '📊', section: '学习' },
   { id: 'exam', label: '在线考试', icon: '📝', section: '学习' },
   { id: 'question', label: '题库练习', icon: '📚', section: '学习' },
+  { id: 'video', label: '视频学习', icon: '🎬', section: '学习' },
   { id: 'wrongbook', label: '错题本', icon: '📕', section: '巩固' },
   { id: 'knowledge', label: '知识点掌握', icon: '🎯', section: '巩固' },
   { id: 'tutor', label: 'AI导师', icon: '🤖', section: '辅助' },
@@ -112,6 +114,7 @@ const doLogout = () => {
         <Dashboard v-if="activeTab === 'dashboard'" />
         <ExamView v-else-if="activeTab === 'exam'" />
         <QuestionView v-else-if="activeTab === 'question'" />
+        <VideoListView v-else-if="activeTab === 'video'" />
         <WrongBook v-else-if="activeTab === 'wrongbook'" />
         <KnowledgeMastery v-else-if="activeTab === 'knowledge'" />
         <TutorView v-else-if="activeTab === 'tutor'" />
