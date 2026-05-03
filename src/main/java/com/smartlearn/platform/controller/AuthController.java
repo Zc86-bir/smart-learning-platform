@@ -1,5 +1,6 @@
 package com.smartlearn.platform.controller;
 
+import com.smartlearn.platform.annotation.LogOperation;
 import com.smartlearn.platform.dto.ApiResponse;
 import com.smartlearn.platform.entity.Role;
 import com.smartlearn.platform.entity.User;
@@ -40,6 +41,7 @@ public class AuthController {
 
     @PostMapping("/login")
     @Operation(summary = "用户名密码登录")
+    @LogOperation(module = "auth", operation = "LOGIN")
     public ApiResponse<Map<String, Object>> login(@RequestBody Map<String, String> body) {
         String username = body.get("username");
         String password = body.get("password");
@@ -86,6 +88,7 @@ public class AuthController {
 
     @PostMapping("/register")
     @Operation(summary = "用户注册")
+    @LogOperation(module = "auth", operation = "REGISTER")
     public ApiResponse<Map<String, Object>> register(@RequestBody Map<String, String> body) {
         String username = body.get("username");
         String password = body.get("password");

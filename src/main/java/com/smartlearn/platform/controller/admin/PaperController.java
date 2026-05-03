@@ -1,6 +1,7 @@
 package com.smartlearn.platform.controller.admin;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.smartlearn.platform.annotation.LogOperation;
 import com.smartlearn.platform.dto.ApiResponse;
 import com.smartlearn.platform.dto.PaperDTO;
 import com.smartlearn.platform.dto.QuestionWithScoreDTO;
@@ -28,12 +29,14 @@ public class PaperController {
 
     @PostMapping("/smart-generate")
     @Operation(summary = "AI智能组卷")
+    @LogOperation(module = "paper", operation = "AI_GENERATE")
     public ApiResponse<List<QuestionWithScoreDTO>> smartGenerate(@Valid @RequestBody SmartPaperRequest request) {
         return ApiResponse.ok(paperService.smartGenerate(request));
     }
 
     @PostMapping
     @Operation(summary = "创建试卷")
+    @LogOperation(module = "paper", operation = "CREATE")
     public ApiResponse<PaperDTO> create(@RequestBody Paper paper) {
         return ApiResponse.ok(paperService.createPaper(paper));
     }

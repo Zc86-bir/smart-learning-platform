@@ -1,6 +1,7 @@
 package com.smartlearn.platform.controller.admin;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.smartlearn.platform.annotation.LogOperation;
 import com.smartlearn.platform.dto.ApiResponse;
 import com.smartlearn.platform.entity.Video;
 import com.smartlearn.platform.service.VideoService;
@@ -33,6 +34,7 @@ public class VideoController {
 
     @PostMapping
     @Operation(summary = "上传视频")
+    @LogOperation(module = "video", operation = "UPLOAD")
     public ApiResponse<Video> upload(
         @RequestParam("title") String title,
         @RequestParam("durationSeconds") int durationSeconds,
@@ -69,6 +71,7 @@ public class VideoController {
 
     @PostMapping("/{id}/approve")
     @Operation(summary = "审核通过")
+    @LogOperation(module = "video", operation = "APPROVE")
     public ApiResponse<Video> approve(HttpServletRequest request, @PathVariable Long id) {
         var userId = (Long) request.getAttribute("userId");
         return ApiResponse.ok(videoService.approveVideo(id, userId));
@@ -76,6 +79,7 @@ public class VideoController {
 
     @PostMapping("/{id}/reject")
     @Operation(summary = "审核拒绝")
+    @LogOperation(module = "video", operation = "REJECT")
     public ApiResponse<Video> reject(
         HttpServletRequest request,
         @PathVariable Long id,

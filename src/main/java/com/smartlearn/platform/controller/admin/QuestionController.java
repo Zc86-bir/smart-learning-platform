@@ -1,6 +1,7 @@
 package com.smartlearn.platform.controller.admin;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.smartlearn.platform.annotation.LogOperation;
 import com.smartlearn.platform.dto.ApiResponse;
 import com.smartlearn.platform.dto.QuestionDTO;
 import com.smartlearn.platform.entity.Question;
@@ -51,6 +52,7 @@ public class QuestionController {
 
     @PostMapping("/import/save")
     @Operation(summary = "保存导入的题目", description = "批量保存已确认的题目")
+    @LogOperation(module = "question", operation = "IMPORT")
     public ApiResponse<Map<String, Integer>> saveImport(@RequestBody List<QuestionDTO> questions) {
         int saved = importService.saveImported(questions);
         return ApiResponse.ok(Map.of("saved", saved, "total", questions.size()));
@@ -58,12 +60,14 @@ public class QuestionController {
 
     @PostMapping("/generate")
     @Operation(summary = "AI智能出题")
+    @LogOperation(module = "question", operation = "AI_GENERATE")
     public ApiResponse<List<QuestionDTO>> generate(@Valid @RequestBody GenerateQuestionsRequest request) {
         return ApiResponse.ok(questionService.generateQuestions(request));
     }
 
     @PostMapping
     @Operation(summary = "保存题目")
+    @LogOperation(module = "question", operation = "CREATE")
     public ApiResponse<QuestionDTO> save(@RequestBody Question question) {
         return ApiResponse.ok(questionService.saveQuestion(question));
     }
@@ -100,12 +104,14 @@ public class QuestionController {
 
     @PutMapping("/{id}")
     @Operation(summary = "更新题目")
+    @LogOperation(module = "question", operation = "UPDATE")
     public ApiResponse<QuestionDTO> update(@PathVariable Long id, @RequestBody Question question) {
         return ApiResponse.ok(questionService.updateQuestion(id, question));
     }
 
     @DeleteMapping("/batch")
     @Operation(summary = "批量删除题目", description = "按ID列表批量删除题目")
+    @LogOperation(module = "question", operation = "BATCH_DELETE")
     public ApiResponse<Map<String, Integer>> batchDelete(@RequestBody List<Long> ids) {
         int deleted = questionService.batchDeleteQuestions(ids);
         return ApiResponse.ok(Map.of("deleted", deleted, "total", ids.size()));
@@ -113,6 +119,7 @@ public class QuestionController {
 
     @DeleteMapping("/{id:\\d+}")
     @Operation(summary = "删除题目")
+    @LogOperation(module = "question", operation = "DELETE")
     public ApiResponse<Void> delete(@PathVariable Long id) {
         questionService.deleteQuestion(id);
         return ApiResponse.ok(null);

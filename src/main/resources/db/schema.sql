@@ -297,6 +297,65 @@ CREATE TABLE IF NOT EXISTS practice_sessions (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ==========================================
+-- Operation Audit Logs (操作审计日志)
+-- ==========================================
+CREATE TABLE IF NOT EXISTS sys_operation_log (
+    id                  BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id             BIGINT       DEFAULT NULL COMMENT '操作用户ID',
+    username            VARCHAR(64)  DEFAULT NULL COMMENT '操作用户名',
+    module              VARCHAR(64)  NOT NULL COMMENT '模块: user/paper/exam/question/video',
+    operation           VARCHAR(64)  NOT NULL COMMENT '操作类型: CREATE/UPDATE/DELETE/LOGIN/EXPORT/IMPORT',
+    method              VARCHAR(128) NOT NULL COMMENT '调用方法',
+    request_method      VARCHAR(8)   NOT NULL COMMENT 'HTTP方法: GET/POST/PUT/DELETE',
+    request_url         VARCHAR(256) NOT NULL COMMENT '请求URL',
+    request_params      TEXT         DEFAULT NULL COMMENT '请求参数(JSON)',
+    response_status     INT          NOT NULL DEFAULT 200 COMMENT '响应状态码',
+    error_message       TEXT         DEFAULT NULL COMMENT '错误信息',
+    ip_address          VARCHAR(45)  DEFAULT NULL COMMENT '操作IP',
+    user_agent          VARCHAR(256) DEFAULT NULL COMMENT '浏览器UA',
+    duration_ms         INT          NOT NULL DEFAULT 0 COMMENT '执行耗时(毫秒)',
+    trace_id            VARCHAR(32)  DEFAULT NULL COMMENT '链路追踪ID',
+    created_at          DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_user_id (user_id),
+    INDEX idx_module (module),
+    INDEX idx_operation (operation),
+    INDEX idx_created (created_at),
+    INDEX idx_user_module (user_id, module)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ==========================================
+-- System Dictionary (数据字典)
+-- ==========================================
+CREATE TABLE IF NOT EXISTS sys_dict_type (
+    id              BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name            VARCHAR(64)  NOT NULL COMMENT '字典名称',
+    code            VARCHAR(64)  NOT NULL UNIQUE COMMENT '字典编码',
+    status          TINYINT      NOT NULL DEFAULT 1 COMMENT '1=启用 0=禁用',
+    remark          VARCHAR(256) DEFAULT NULL,
+    created_at      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted         TINYINT      NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS sys_dict_data (
+    id              BIGINT AUTO_INCREMENT PRIMARY KEY,
+    dict_type_id    BIGINT       NOT NULL COMMENT '字典类型ID',
+    label           VARCHAR(64)  NOT NULL COMMENT '显示标签',
+    value           VARCHAR(64)  NOT NULL COMMENT '字典值',
+    sort            INT          NOT NULL DEFAULT 0,
+    status          TINYINT      NOT NULL DEFAULT 1,
+    color           VARCHAR(16)  DEFAULT NULL COMMENT 'UI颜色',
+    is_default      TINYINT      NOT NULL DEFAULT 0,
+    remark          VARCHAR(256) DEFAULT NULL,
+    created_at      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted         TINYINT      NOT NULL DEFAULT 0,
+    INDEX idx_dict_type (dict_type_id),
+    INDEX idx_value (value),
+    UNIQUE KEY uk_dict_type_value (dict_type_id, value)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ==========================================
 -- Seed data
 -- ==========================================
 INSERT INTO categories (name, sort_order) VALUES
