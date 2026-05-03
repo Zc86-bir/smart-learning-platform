@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS practice_sessions (
     difficulty          VARCHAR(16)  DEFAULT NULL COMMENT 'EASY/MEDIUM/HARD',
     question_count      INT          NOT NULL DEFAULT 0,
     question_ids        JSON         NOT NULL COMMENT '题目ID列表',
-    answers             JSON         NOT NULL DEFAULT '[]' COMMENT '作答记录',
+    answers             JSON         NOT NULL COMMENT '作答记录',
     correct_count       INT          NOT NULL DEFAULT 0,
     accuracy            INT          DEFAULT NULL COMMENT '正确率 0-100',
     status              VARCHAR(16)  NOT NULL DEFAULT 'IN_PROGRESS' COMMENT 'IN_PROGRESS/FINISHED',
