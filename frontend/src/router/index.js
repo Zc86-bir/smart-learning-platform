@@ -18,7 +18,13 @@ const routes = [
     path: '/admin',
     name: 'admin',
     component: () => import('../views/AdminView.vue'),
-    meta: { requiresAuth: true, role: 'ADMIN' }
+    meta: { requiresAuth: true, roles: ['ADMIN', 'SUPER_ADMIN'] }
+  },
+  {
+    path: '/tutor',
+    name: 'tutor',
+    component: () => import('../views/TutorView.vue'),
+    meta: { requiresAuth: true, roles: ['TEACHER', 'ADMIN', 'SUPER_ADMIN'] }
   }
 ]
 
@@ -32,6 +38,9 @@ router.beforeEach((to) => {
     return { name: 'login' }
   }
   if (to.meta.role && localStorage.getItem('userRole') !== to.meta.role) {
+    return { name: 'login' }
+  }
+  if (to.meta.roles && !to.meta.roles.includes(localStorage.getItem('userRole'))) {
     return { name: 'login' }
   }
 })

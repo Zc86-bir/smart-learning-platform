@@ -90,7 +90,9 @@ public class SecurityInterceptor implements HandlerInterceptor {
             var allowed = methodAnnotation != null ? methodAnnotation : classAnnotation;
             if (allowed != null) {
                 var requiredRoles = Arrays.asList(allowed.value());
-                boolean hasRole = userRoles.stream().anyMatch(requiredRoles::contains);
+                boolean hasRole = userRoles.stream().anyMatch(r ->
+                    requiredRoles.contains(r) || "SUPER_ADMIN".equals(r)
+                );
                 if (!hasRole) {
                     throw new BizException(403, "权限不足：需要 " + requiredRoles + ", 当前角色 " + userRoles);
                 }
