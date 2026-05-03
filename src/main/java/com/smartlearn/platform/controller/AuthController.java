@@ -10,6 +10,7 @@ import com.smartlearn.platform.mapper.RoleMapper;
 import com.smartlearn.platform.mapper.UserMapper;
 import com.smartlearn.platform.mapper.UserRoleMapper;
 import com.smartlearn.platform.util.JwtUtil;
+import com.smartlearn.platform.validator.PasswordStrength;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -30,6 +31,7 @@ public class AuthController {
     private final UserRoleMapper userRoleMapper;
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    private final PasswordStrength.PasswordValidator passwordValidator = new PasswordStrength.PasswordValidator();
 
     public AuthController(UserMapper userMapper, RoleMapper roleMapper,
                           UserRoleMapper userRoleMapper, JwtUtil jwtUtil) {
@@ -97,8 +99,8 @@ public class AuthController {
         if (username == null || username.isBlank()) {
             throw new BizException("请输入用户名");
         }
-        if (password == null || password.length() < 6) {
-            throw new BizException("密码长度不能少于6位");
+        if (password == null || !passwordValidator.isValid(password, null)) {
+            throw new BizException("密码强度不足: 至少8位,包含大小写字母、数字和特殊字符");
         }
 
         // Check if username already exists

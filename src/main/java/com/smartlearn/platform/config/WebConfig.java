@@ -2,6 +2,7 @@ package com.smartlearn.platform.config;
 
 import com.smartlearn.platform.filter.JwtAuthenticationFilter;
 import com.smartlearn.platform.interceptor.SecurityInterceptor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,6 +18,9 @@ public class WebConfig implements WebMvcConfigurer {
     private final SecurityInterceptor securityInterceptor;
     private final RateLimitInterceptor rateLimitInterceptor;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    @Value("${app.cors.allowed-origins:*}")
+    private String[] corsAllowedOrigins;
 
     public WebConfig(SecurityInterceptor securityInterceptor, RateLimitInterceptor rateLimitInterceptor, JwtAuthenticationFilter jwtAuthenticationFilter) {
         this.securityInterceptor = securityInterceptor;
@@ -36,10 +40,11 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-            .allowedOriginPatterns("*")
+            .allowedOriginPatterns(corsAllowedOrigins)
             .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
             .allowedHeaders("*")
-            .exposedHeaders("X-Total-Count")
+            .exposedHeaders("X-Trace-Id", "X-Total-Count")
+            .allowCredentials(true)
             .maxAge(3600);
     }
 

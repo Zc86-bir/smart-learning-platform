@@ -100,6 +100,8 @@ app:
     secret: ${JWT_SECRET:Y2hhbmdlLXRoaXMtdG8tYS1sb25nLXNlY3JldC1rZXktaW4tcHJvZHVjdGlvbi1lbnZpcm9ubWVudA==}
     expiration-ms: ${JWT_EXPIRATION_MS:86400000}
     refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:604800000}
+  cors:
+    allowed-origins: ${CORS_ORIGINS:*}
 
 # Flyway Database Migration
 flyway:
