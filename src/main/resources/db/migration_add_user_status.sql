@@ -1,0 +1,3 @@
+USE smart_learn;
+
+ALTER TABLE users ADD COLUMN status TINYINT NOT NULL DEFAULT 1 COMMENT '1=启用 0=禁用' AFTER avatar;
