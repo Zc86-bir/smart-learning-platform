@@ -21,6 +21,7 @@ import com.smartlearn.platform.service.WrongQuestionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -69,6 +70,7 @@ public class ExamServiceImpl implements ExamService {
     }
 
     @Override
+    @Transactional
     public ExamRecord startExam(Long userId, Long paperId) {
         var paper = paperMapper.selectById(paperId);
         if (paper == null) throw new BizException(404, "试卷不存在");
@@ -96,6 +98,7 @@ public class ExamServiceImpl implements ExamService {
     }
 
     @Override
+    @Transactional
     public void submitAnswer(Long userId, Long examRecordId, String answersJson,
                              int cutScreenCount, int clipboardCount) {
         var record = examRecordMapper.selectById(examRecordId);

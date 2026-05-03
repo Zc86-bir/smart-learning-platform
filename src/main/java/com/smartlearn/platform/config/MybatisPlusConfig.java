@@ -10,11 +10,13 @@ import org.apache.ibatis.reflection.MetaObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import javax.sql.DataSource;
 import java.time.LocalDateTime;
 
 @Configuration
+@EnableTransactionManagement
 public class MybatisPlusConfig {
 
     @Autowired

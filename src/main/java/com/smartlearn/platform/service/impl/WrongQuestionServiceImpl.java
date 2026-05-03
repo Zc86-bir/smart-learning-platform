@@ -11,6 +11,7 @@ import com.smartlearn.platform.mapper.WrongQuestionMapper;
 import com.smartlearn.platform.service.WrongQuestionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -30,6 +31,7 @@ public class WrongQuestionServiceImpl implements WrongQuestionService {
     }
 
     @Override
+    @Transactional
     public void addWrongQuestion(Long userId, Long questionId, String studentAnswer,
                                   String correctAnswer, Long examRecordId) {
         var wrapper = new LambdaQueryWrapper<WrongQuestion>()

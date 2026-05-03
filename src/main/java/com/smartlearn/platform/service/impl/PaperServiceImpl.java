@@ -19,6 +19,7 @@ import com.smartlearn.platform.service.AiChatService;
 import com.smartlearn.platform.service.PaperService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -57,6 +58,7 @@ public class PaperServiceImpl implements PaperService {
     }
 
     @Override
+    @Transactional
     public PaperDTO createPaper(Paper paper) {
         paperMapper.insert(paper);
         return getPaperDTO(paper.getId());
@@ -93,6 +95,7 @@ public class PaperServiceImpl implements PaperService {
     }
 
     @Override
+    @Transactional
     public List<QuestionWithScoreDTO> smartGenerate(SmartPaperRequest request) {
         var typeDist = request.typeDist() != null ? request.typeDist() : defaultTypeDist();
 

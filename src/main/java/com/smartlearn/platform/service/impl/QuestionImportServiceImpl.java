@@ -18,6 +18,7 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.imageio.ImageIO;
 import java.io.BufferedReader;
@@ -58,6 +59,7 @@ public class QuestionImportServiceImpl implements QuestionImportService {
     }
 
     @Override
+    @Transactional
     public int saveImported(List<QuestionDTO> questions) {
         int saved = 0;
         for (var dto : questions) {
