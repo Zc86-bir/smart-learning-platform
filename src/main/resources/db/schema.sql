@@ -458,6 +458,47 @@ INSERT INTO sys_user_role (user_id, role_id) VALUES
     ON DUPLICATE KEY UPDATE user_id=VALUES(user_id);
 
 -- ==========================================
+-- Seed: Dictionary Types & Data
+-- ==========================================
+INSERT INTO sys_dict_type (id, name, code, status, remark) VALUES
+(1, '视频状态', 'video_status', 1, '视频审核状态'),
+(2, '题目难度', 'difficulty', 1, '题目难度等级'),
+(3, '题目类型', 'question_type', 1, '题目类型枚举'),
+(4, '用户状态', 'user_status', 1, '用户账号状态'),
+(5, '考试状态', 'exam_status', 1, '考试记录状态'),
+(6, '审核状态', 'review_status', 1, '通用审核状态')
+    ON DUPLICATE KEY UPDATE name=VALUES(name);
+
+INSERT INTO sys_dict_data (dict_type_id, label, value, sort, status, color, remark) VALUES
+-- 视频状态
+(1, '待审核', 'PENDING', 1, 1, 'orange', '等待管理员审核'),
+(1, '已通过', 'APPROVED', 2, 1, 'green', '审核通过可播放'),
+(1, '已拒绝', 'REJECTED', 3, 1, 'red', '审核被拒绝'),
+-- 题目难度
+(2, '简单', 'EASY', 1, 1, 'green', '基础难度'),
+(2, '中等', 'MEDIUM', 2, 1, 'orange', '中等难度'),
+(2, '困难', 'HARD', 3, 1, 'red', '高难度'),
+-- 题目类型
+(3, '单选题', 'SINGLE_CHOICE', 1, 1, null, null),
+(3, '多选题', 'MULTIPLE_CHOICE', 2, 1, null, null),
+(3, '判断题', 'TRUE_FALSE', 3, 1, null, null),
+(3, '简答题', 'SHORT_ANSWER', 4, 1, null, null),
+(3, '编程题', 'CODING', 5, 1, null, null),
+-- 用户状态
+(4, '启用', '1', 1, 1, 'green', null),
+(4, '禁用', '0', 2, 1, 'red', null),
+-- 考试状态
+(5, '考试中', 'IN_PROGRESS', 1, 1, 'blue', null),
+(5, '已提交', 'SUBMITTED', 2, 1, 'orange', null),
+(5, '已批阅', 'GRADED', 3, 1, 'green', null),
+(5, '强制提交', 'FORCE_SUBMITTED', 4, 1, 'red', null),
+-- 审核状态
+(6, '待审核', 'PENDING', 1, 1, 'orange', null),
+(6, '通过', 'APPROVED', 2, 1, 'green', null),
+(6, '拒绝', 'REJECTED', 3, 1, 'red', null)
+    ON DUPLICATE KEY UPDATE label=VALUES(label);
+
+-- ==========================================
 -- Seed: Role-Permission Bindings
 -- ==========================================
 -- SUPER_ADMIN 拥有所有权限
