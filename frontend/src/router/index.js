@@ -10,8 +10,8 @@ const routes = [
   },
   {
     path: '/student/tutor',
-    name: 'tutor',
-    component: () => import('../views/TutorView.vue'),
+    name: 'student-tutor',
+    component: () => import('../views/TutorChat.vue'),
     meta: { requiresAuth: true }
   },
   {

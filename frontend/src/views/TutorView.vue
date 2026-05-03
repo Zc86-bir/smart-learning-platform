@@ -1,255 +1,154 @@
 <script setup>
-import { ref, nextTick } from 'vue'
-import { api } from '../composables/api'
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuth, api } from '../composables/api'
+import TutorChat from './TutorChat.vue'
+import TeacherDashboard from './TeacherDashboard.vue'
+import ClassManagement from './ClassManagement.vue'
+import PaperManagement from './PaperManagement.vue'
+import VideoManagement from './VideoManagement.vue'
 
-const questions = ref([])
-const selectedQId = ref('')
-const selectedQStem = ref('')
-const selectedQAnswer = ref('')
-const inputMessage = ref('')
-const messages = ref([])
-const streaming = ref(false)
-const loading = ref(false)
+const { nickname, userRole, logout } = useAuth()
+const router = useRouter()
+const activeTab = ref('dashboard')
 
-const loadQuestions = async () => {
+// Stats
+const totalStudents = ref(0)
+const totalExams = ref(0)
+const completedExams = ref(0)
+const pendingVideos = ref(0)
+const myPapers = ref(0)
+
+const navItems = [
+  { id: 'dashboard', label: '工作台', icon: '📊', section: '概览' },
+  { id: 'class', label: '班级管理', icon: '👥', section: '教学' },
+  { id: 'papers', label: '试卷管理', icon: '📋', section: '教学' },
+  { id: 'videos', label: '视频管理', icon: '🎬', section: '资源' },
+  { id: 'chat', label: 'AI答疑', icon: '🤖', section: '辅助' }
+]
+
+const doLogout = () => {
+  logout()
+  router.push('/')
+}
+
+const loadStats = async () => {
   try {
-    const page = await api('/student/questions?page=1&size=50')
-    questions.value = page.records || []
-  } catch (e) {
-    questions.value = []
-  }
-}
-
-const loadHistory = async (questionId) => {
-  loading.value = true
+    const stats = await api('/admin/dashboard/stats')
+    totalStudents.value = stats.totalStudents || 0
+    totalExams.value = stats.totalExams || 0
+    completedExams.value = stats.completedExams || 0
+  } catch {}
   try {
-    const history = await api(`/student/ai-tutor/history/${questionId}`)
-    messages.value = Array.isArray(history) ? history : []
-  } catch {
-    messages.value = []
-  } finally {
-    loading.value = false
-  }
-}
-
-const onQuestionChange = () => {
-  const q = questions.value.find(q => q.id == selectedQId.value)
-  if (q) {
-    selectedQStem.value = q.stem
-    selectedQAnswer.value = q.answer || ''
-    loadHistory(q.id)
-  }
-}
-
-const send = async () => {
-  const text = inputMessage.value.trim()
-  if (!text) return
-  if (!selectedQId.value) {
-    alert('请先选择要提问的题目')
-    return
-  }
-
-  messages.value.push({ role: 'user', content: text })
-  inputMessage.value = ''
-  streaming.value = true
-
-  messages.value.push({ role: 'assistant', content: '' })
-  await nextTick()
-
+    const videos = await api('/admin/videos?status=PENDING&page=1&size=1')
+    pendingVideos.value = videos.total || 0
+  } catch {}
   try {
-    const response = await fetch('/api/student/ai-tutor/ask', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-User-Id': localStorage.getItem('userId'),
-        'X-User-Role': localStorage.getItem('userRole')
-      },
-      body: JSON.stringify({
-        questionId: selectedQId.value,
-        message: text,
-        questionStem: selectedQStem.value,
-        standardAnswer: selectedQAnswer.value
-      })
-    })
-
-    const reader = response.body.getReader()
-    const decoder = new TextDecoder()
-    let buffer = ''
-    let fullAnswer = ''
-
-    while (true) {
-      const { done, value } = await reader.read()
-      if (done) break
-
-      buffer += decoder.decode(value, { stream: true })
-      const lines = buffer.split('\n')
-      buffer = lines.pop() || ''
-
-      for (const line of lines) {
-        if (line.startsWith('data:')) {
-          const data = line.slice(5).trim()
-          if (data === '[DONE]') {
-            streaming.value = false
-            break
-          }
-          try {
-            const parsed = JSON.parse(data)
-            const chunk = parsed.content || parsed.choices?.[0]?.delta?.content || ''
-            if (chunk) {
-              fullAnswer += chunk
-              const lastMsg = messages.value[messages.value.length - 1]
-              if (lastMsg.role === 'assistant') {
-                lastMsg.content = fullAnswer
-              }
-              await nextTick()
-            }
-          } catch {}
-        }
-      }
-    }
-
-    if (!fullAnswer) {
-      const lastMsg = messages.value[messages.value.length - 1]
-      if (lastMsg.role === 'assistant' && !lastMsg.content) {
-        lastMsg.content = '(回复结束)'
-      }
-    }
-
-    streaming.value = false
-  } catch (e) {
-    streaming.value = false
-    const lastMsg = messages.value[messages.value.length - 1]
-    if (lastMsg.role === 'assistant') {
-      lastMsg.content = '请求失败: ' + e.message
-    }
-  }
+    const papers = await api('/admin/papers?page=1&size=1')
+    myPapers.value = papers.total || 0
+  } catch {}
 }
 
-const clearHistory = async () => {
-  if (selectedQId.value) {
-    try {
-      await fetch(`/api/student/ai-tutor/clear/${selectedQId.value}`, {
-        method: 'DELETE',
-        headers: {
-          'X-User-Id': localStorage.getItem('userId'),
-          'X-User-Role': localStorage.getItem('userRole')
-        }
-      })
-      messages.value = []
-    } catch (e) {
-      messages.value = []
-    }
-  }
-}
-
-const askAboutCurrent = () => {
-  if (!selectedQStem.value) return
-  const truncated = selectedQStem.value.length > 200
-    ? selectedQStem.value.substring(0, 200) + '...'
-    : selectedQStem.value
-  inputMessage.value = `请帮我分析这道题：${truncated}`
-}
-
-// Check for auto-question from localStorage (from "基于当前题目提问" button)
-const checkAutoQuestion = () => {
-  const autoQ = localStorage.getItem('tutorAutoQuestion')
-  const autoA = localStorage.getItem('tutorAutoAnswer')
-  const autoId = localStorage.getItem('tutorAutoQuestionId')
-  if (autoQ && autoId) {
-    selectedQId.value = autoId
-    selectedQStem.value = autoQ
-    selectedQAnswer.value = autoA || ''
-    inputMessage.value = `请帮我分析这道题：${autoQ.length > 100 ? autoQ.substring(0, 100) + '...' : autoQ}`
-    loadHistory(autoId)
-    // Clean up
-    localStorage.removeItem('tutorAutoQuestion')
-    localStorage.removeItem('tutorAutoAnswer')
-    localStorage.removeItem('tutorAutoQuestionId')
-  }
-}
-
-const goBack = () => {
-  window.history.back()
-}
-
-loadQuestions()
-checkAutoQuestion()
+onMounted(() => loadStats())
 </script>
 
 <template>
-  <div>
-    <div class="page-header mb-4">
-      <div>
-        <button class="btn btn-ghost" @click="goBack" style="padding-left: 0;">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="15 18 9 12 15 6"/>
-          </svg>
-          返回
+  <div class="app-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="sidebar-brand-icon teacher">T</div>
+        <span class="sidebar-brand-text">教师工作台</span>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="sidebar-section-title">概览</div>
+        <button
+          v-for="item in navItems.filter(i => i.section === '概览')"
+          :key="item.id"
+          :class="['sidebar-item', { active: activeTab === item.id }]"
+          @click="activeTab = item.id"
+        >
+          <span class="sidebar-item-icon">{{ item.icon }}</span>
+          <span class="sidebar-item-label">{{ item.label }}</span>
+          <span v-if="item.id === 'videos' && pendingVideos > 0" class="sidebar-badge">{{ pendingVideos }}</span>
         </button>
-        <h2>AI一对一答疑</h2>
-        <p>苏格拉底式引导：AI会先反问，不直接给答案</p>
-      </div>
-      <button class="btn btn-outline" @click="clearHistory" v-if="messages.length">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-        </svg>
-        清空记录
-      </button>
-    </div>
 
-    <div class="card mb-4">
-      <div class="card-body">
-        <div class="form-group" style="margin-bottom: 0;">
-          <label>选择题目</label>
-          <select class="form-select" v-model="selectedQId" @change="onQuestionChange">
-            <option value="">-- 选择要提问的题目 --</option>
-            <option v-for="q in questions" :key="q.id" :value="q.id">{{ q.stem.substring(0, 50) }}...</option>
-          </select>
+        <div class="sidebar-section-title">教学</div>
+        <button
+          v-for="item in navItems.filter(i => i.section === '教学')"
+          :key="item.id"
+          :class="['sidebar-item', { active: activeTab === item.id }]"
+          @click="activeTab = item.id"
+        >
+          <span class="sidebar-item-icon">{{ item.icon }}</span>
+          <span class="sidebar-item-label">{{ item.label }}</span>
+        </button>
+
+        <div class="sidebar-section-title">资源</div>
+        <button
+          v-for="item in navItems.filter(i => i.section === '资源')"
+          :key="item.id"
+          :class="['sidebar-item', { active: activeTab === item.id }]"
+          @click="activeTab = item.id"
+        >
+          <span class="sidebar-item-icon">{{ item.icon }}</span>
+          <span class="sidebar-item-label">{{ item.label }}</span>
+          <span v-if="item.id === 'videos' && pendingVideos > 0" class="sidebar-badge">{{ pendingVideos }}</span>
+        </button>
+
+        <div class="sidebar-section-title">辅助</div>
+        <button
+          v-for="item in navItems.filter(i => i.section === '辅助')"
+          :key="item.id"
+          :class="['sidebar-item', { active: activeTab === item.id }]"
+          @click="activeTab = item.id"
+        >
+          <span class="sidebar-item-icon">{{ item.icon }}</span>
+          <span class="sidebar-item-label">{{ item.label }}</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="sidebar-user">
+          <div class="sidebar-avatar teacher">{{ nickname?.charAt(0)?.toUpperCase() || 'T' }}</div>
+          <div class="sidebar-user-info">
+            <div class="sidebar-user-name">{{ nickname }}</div>
+            <div class="sidebar-user-role">教师</div>
+          </div>
+          <button class="btn btn-ghost btn-icon btn-sm" @click="doLogout" title="退出登录">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+          </button>
         </div>
-        <div v-if="selectedQId" class="mt-2">
-          <button class="btn btn-sm btn-outline" @click="askAboutCurrent" :disabled="!selectedQStem">
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <header class="app-header">
+        <div class="app-header-left">
+          <h1 class="page-title">{{ navItems.find(i => i.id === activeTab)?.label || '教师工作台' }}</h1>
+        </div>
+        <div class="app-header-right">
+          <span class="header-btn">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+              <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
             </svg>
-            基于当前题目提问
-          </button>
+            教师端
+          </span>
         </div>
-      </div>
-    </div>
+      </header>
 
-    <div class="card">
-      <div class="card-body">
-        <div v-if="loading" class="text-center" style="padding: 40px 0; color: var(--slate-400);">
-          <div class="spinner" style="margin: 0 auto 12px; width: 32px; height: 32px; border-width: 3px;"></div>
-          <p>加载对话记录...</p>
-        </div>
-        <div class="tutor-messages" v-else>
-          <div v-if="!messages.length" class="text-center" style="padding: 60px 0; color: var(--slate-400);">
-            <div style="font-size: 48px; margin-bottom: 12px;"></div>
-            <p>选择题目后，输入你的问题开始追问</p>
-          </div>
-          <div v-for="(msg, i) in messages" :key="i" :class="['msg', msg.role === 'user' ? 'user' : 'assistant']">
-            <div class="msg-bubble" :class="{ streaming: msg.role === 'assistant' && streaming && i === messages.length - 1 }">
-              {{ msg.content }}
-            </div>
-          </div>
-        </div>
-
-        <div class="tutor-input-area">
-          <input
-            class="tutor-input"
-            v-model="inputMessage"
-            placeholder="输入你的问题..."
-            @keyup.enter="send"
-            :disabled="streaming"
-          />
-          <button class="btn btn-primary" @click="send" :disabled="streaming || !inputMessage.trim()">
-            <svg v-if="!streaming" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
-            </svg>
-            {{ streaming ? '思考中...' : '发送' }}
-          </button>
-        </div>
+      <div class="page-content">
+        <TeacherDashboard v-if="activeTab === 'dashboard'" :total-students="totalStudents" :total-exams="totalExams" :completed-exams="completedExams" />
+        <ClassManagement v-else-if="activeTab === 'class'" />
+        <PaperManagement v-else-if="activeTab === 'papers'" />
+        <VideoManagement v-else-if="activeTab === 'videos'" @refresh="loadStats" />
+        <TutorChat v-else />
       </div>
     </div>
   </div>
