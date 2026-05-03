@@ -174,7 +174,7 @@ loadQuestions()
               <td class="text-muted">#{{ q.id }}</td>
               <td>
                 <div v-if="highlightKeyword" v-html="highlightText(stripLatexMarkers(q.stem), highlightKeyword)" style="max-width: 500px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></div>
-                <div v-else v-latex="q.stem" style="max-width: 500px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></div>
+                <div v-else :key="'qs-' + q.id" v-latex="q.stem" style="max-width: 500px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></div>
               </td>
               <td><span class="badge badge-gray">{{ q.category?.split('-')[0] || '' }}</span></td>
               <td>{{ questionTypeLabel(q.type) }}</td>
@@ -238,12 +238,12 @@ loadQuestions()
           </div>
         </div>
         <div class="card-body">
-          <div class="q-stem" v-latex="selectedQuestion.stem"></div>
+          <div class="q-stem" :key="'detail-' + selectedQuestion.id" v-latex="selectedQuestion.stem"></div>
 
           <div v-if="selectedQuestion.options" class="mt-4">
             <div v-for="[k, v] in Object.entries(selectedQuestion.options)" :key="k" class="q-option" style="cursor: default;">
               <span class="q-option-key">{{ k }}</span>
-              <span v-latex="v"></span>
+              <span :key="'qopt-' + selectedQuestion.id + '-' + k" v-latex="v"></span>
             </div>
           </div>
 
@@ -253,13 +253,13 @@ loadQuestions()
             </button>
             <div v-if="showAnswer" class="mt-4 p-4" style="background: var(--success-bg); border-radius: var(--radius-md);">
               <div style="font-weight: 600; color: var(--success); margin-bottom: 4px;">参考答案</div>
-              <span v-latex="selectedQuestion.answer || '见解析'"></span>
+              <span :key="'qans-' + selectedQuestion.id" v-latex="selectedQuestion.answer || '见解析'"></span>
             </div>
           </div>
 
           <div v-if="selectedQuestion.analysis" class="mt-4 p-4" style="background: var(--primary-50); border-radius: var(--radius-md);">
             <div style="font-weight: 600; color: var(--primary); margin-bottom: 4px;">解析</div>
-            <span v-latex="selectedQuestion.analysis"></span>
+            <span :key="'qana-' + selectedQuestion.id" v-latex="selectedQuestion.analysis"></span>
           </div>
         </div>
       </div>

@@ -161,7 +161,7 @@ onMounted(() => { loadQuestions() })
           </div>
         </div>
         <div class="card-body">
-          <div class="q-stem" v-latex="q.stem"></div>
+          <div class="q-stem" :key="'wb-stem-' + q.id" v-latex="q.stem"></div>
 
           <div class="mt-4 p-4" style="background: var(--danger-bg); border-radius: var(--radius-md);">
             <div style="font-weight: 600; color: var(--danger); font-size: 13px; margin-bottom: 4px;">你的答案</div>
@@ -169,11 +169,11 @@ onMounted(() => { loadQuestions() })
           </div>
           <div class="mt-2 p-4" style="background: var(--success-bg); border-radius: var(--radius-md);">
             <div style="font-weight: 600; color: var(--success); font-size: 13px; margin-bottom: 4px;">正确答案</div>
-            <span v-latex="q.correctAnswer"></span>
+            <span :key="'wb-ca-' + q.id" v-latex="q.correctAnswer"></span>
           </div>
           <div v-if="q.analysis" class="mt-2 p-4" style="background: var(--primary-50); border-radius: var(--radius-md);">
             <div style="font-weight: 600; color: var(--primary); font-size: 13px; margin-bottom: 4px;">解析</div>
-            <span v-latex="q.analysis"></span>
+            <span :key="'wb-ana-' + q.id" v-latex="q.analysis"></span>
           </div>
           <div v-if="q.knowledgePoint" class="mt-2 text-sm text-muted">知识点：{{ q.knowledgePoint }}</div>
           <div v-if="q.lastWrongTime" class="mt-1 text-xs text-muted">最近错误：{{ q.lastWrongTime }}</div>

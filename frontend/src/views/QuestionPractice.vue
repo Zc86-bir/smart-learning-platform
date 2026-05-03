@@ -217,7 +217,7 @@ const difficultyLabel = { EASY: '简单', MEDIUM: '中等', HARD: '困难' }
           ]">{{ difficultyLabel[currentQuestion.difficulty] || currentQuestion.difficulty }}</span>
         </div>
 
-        <div class="question-stem" v-latex="currentQuestion.stem"></div>
+        <div class="question-stem" :key="'stem-' + currentQuestion.id" v-latex="currentQuestion.stem"></div>
 
         <!-- Options for choice/true-false questions -->
         <div v-if="currentQuestion.options" class="question-options">
@@ -228,7 +228,7 @@ const difficultyLabel = { EASY: '简单', MEDIUM: '中等', HARD: '困难' }
             @click="answers[currentIndex] = k"
           >
             <span class="option-key">{{ k }}</span>
-            <span v-latex="v"></span>
+            <span :key="'opt-' + currentQuestion.id + '-' + k" v-latex="v"></span>
           </button>
         </div>
 
@@ -258,11 +258,11 @@ const difficultyLabel = { EASY: '简单', MEDIUM: '中等', HARD: '困难' }
             </div>
             <div class="feedback-answer">
               <strong>正确答案: </strong>
-              <span v-latex="immediateResults[currentQuestion.id].correctAnswer"></span>
+              <span :key="'ans-' + currentQuestion.id" v-latex="immediateResults[currentQuestion.id].correctAnswer"></span>
             </div>
             <div v-if="immediateResults[currentQuestion.id].analysis" class="feedback-analysis">
               <strong>解析: </strong>
-              <span v-latex="immediateResults[currentQuestion.id].analysis"></span>
+              <span :key="'ana-' + currentQuestion.id" v-latex="immediateResults[currentQuestion.id].analysis"></span>
             </div>
           </div>
         </div>
@@ -328,19 +328,19 @@ const difficultyLabel = { EASY: '简单', MEDIUM: '中等', HARD: '困难' }
               {{ q.correct ? '正确' : '错误' }}
             </span>
           </div>
-          <div class="report-question-stem" v-latex="q.stem"></div>
+          <div class="report-question-stem" :key="'rstem-' + q.id" v-latex="q.stem"></div>
           <div class="report-question-answers">
             <div class="report-answer-item">
               <span class="report-answer-label">你的答案:</span>
-              <span v-latex="q.userAnswer || '未作答'"></span>
+              <span :key="'rua-' + q.id" v-latex="q.userAnswer || '未作答'"></span>
             </div>
             <div v-if="!q.correct" class="report-answer-item">
               <span class="report-answer-label">正确答案:</span>
-              <span v-latex="q.correctAnswer"></span>
+              <span :key="'rca-' + q.id" v-latex="q.correctAnswer"></span>
             </div>
             <div v-if="q.analysis" class="report-answer-item report-analysis">
               <span class="report-answer-label">解析:</span>
-              <span v-latex="q.analysis"></span>
+              <span :key="'ran-' + q.id" v-latex="q.analysis"></span>
             </div>
           </div>
         </div>

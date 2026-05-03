@@ -19,11 +19,15 @@ function renderElement(el, value) {
   const text = String(value ?? '')
   el._latexSource = text
 
-  while (el.firstChild) {
-    el.removeChild(el.firstChild)
-  }
+  // Render to a detached container first to avoid FOUC and DOM conflicts
+  const container = document.createElement('div')
+  container.style.display = 'contents'
 
-  if (!text.trim()) return
+  if (!text.trim()) {
+    // Clear children safely
+    while (el.firstChild) el.removeChild(el.firstChild)
+    return
+  }
 
   const processed = preprocessLatex(text)
   const parts = tokenizeLatex(processed)
@@ -32,17 +36,19 @@ function renderElement(el, value) {
       const div = document.createElement('div')
       div.className = 'katex-block'
       div.innerHTML = katex.renderToString(part.content, BLOCK_OPTS)
-      el.appendChild(div)
+      container.appendChild(div)
     } else if (part.type === 'inline') {
       const span = document.createElement('span')
       span.innerHTML = katex.renderToString(part.content, INLINE_OPTS)
-      while (span.firstChild) {
-        el.appendChild(span.firstChild)
-      }
+      container.appendChild(span)
     } else {
-      el.appendChild(document.createTextNode(part.content))
+      container.appendChild(document.createTextNode(part.content))
     }
   })
+
+  // Atomic DOM swap
+  while (el.firstChild) el.removeChild(el.firstChild)
+  while (container.firstChild) el.appendChild(container.firstChild)
 }
 
 /**
@@ -102,14 +108,12 @@ function isInsideDollar(text, match) {
   const idx = text.indexOf(match)
   if (idx === -1) return false
 
-  // Count $ before this position (ignoring escaped \$)
   let dollarCount = 0
   for (let i = 0; i < idx; i++) {
     if (text[i] === '$' && (i === 0 || text[i - 1] !== '\\')) {
       dollarCount++
     }
   }
-  // If odd number of $ before, we're inside a $...$ block
   return dollarCount % 2 === 1
 }
 
