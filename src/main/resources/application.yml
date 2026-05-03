@@ -101,12 +101,24 @@ app:
     expiration-ms: ${JWT_EXPIRATION_MS:86400000}
     refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:604800000}
 
+# Flyway Database Migration
+flyway:
+  enabled: true
+  locations: classpath:db/migration
+  baseline-on-migrate: true
+  baseline-version: 1
+  out-of-order: false
+  clean-disabled: true
+
 ---
 # ==================== Development Profile ====================
 spring:
   config:
     activate:
       on-profile: dev
+
+flyway:
+  enabled: true
 
 mybatis-plus:
   configuration:
@@ -133,6 +145,10 @@ spring:
   config:
     activate:
       on-profile: prod
+
+flyway:
+  enabled: true
+  clean-disabled: true
 
 mybatis-plus:
   configuration:
