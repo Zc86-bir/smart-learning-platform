@@ -2,6 +2,11 @@
 .idea/
 *.iml
 .env
+.env.*
+!.env.example
 uploads/
 *.log
 .DS_Store
+/backups/
+*.sql.gz
+node_modules/

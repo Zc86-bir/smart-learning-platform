@@ -2,10 +2,15 @@ server:
   port: 9090
   servlet:
     context-path: /
+  # Graceful shutdown
+  shutdown: graceful
 
 spring:
   application:
     name: smart-learn-platform
+  # Graceful shutdown timeout
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
 
   # OAuth2 Client Configuration (uncomment and fill in values to enable)
   # security:
@@ -84,15 +89,23 @@ mimo:
 logging:
   config: classpath:logback-spring.xml
 
-# Actuator
+# Actuator + Metrics
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics
+        include: health,info,metrics,prometheus
   endpoint:
     health:
       show-details: when_authorized
+  metrics:
+    tags:
+      application: ${spring.application.name}
+    distribution:
+      percentiles-histogram:
+        "[http.server.requests]": true
+      slo:
+        "[http.server.requests]": 50ms,100ms,200ms,500ms,1s,2s,5s
 
 # JWT Configuration
 app:
