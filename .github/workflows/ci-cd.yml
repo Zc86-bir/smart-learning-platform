@@ -2,127 +2,113 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [master, main]
+    branches: [master]
   pull_request:
-    branches: [master, main]
+    branches: [master]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  # ========== Build & Test ==========
+  # Stage 1: Build & Test
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up JDK 24
+      - name: Setup JDK 26
         uses: actions/setup-java@v4
         with:
-          java-version: '24'
+          java-version: '26'
           distribution: 'temurin'
           cache: maven
 
-      - name: Build with Maven
-        run: mvn clean package -DskipTests -q
+      - name: Cache Maven dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-maven-
+
+      - name: Compile
+        run: mvn -B compile -q
 
       - name: Run tests
-        run: mvn test -q
+        run: mvn -B test -q
 
-      - name: Upload JAR artifact
+      - name: Package
+        run: mvn -B package -DskipTests -q
+
+      - name: Upload JAR
         uses: actions/upload-artifact@v4
-        if: github.event_name == 'push'
         with:
           name: app-jar
           path: target/*.jar
-          retention-days: 1
+          retention-days: 7
 
-  # ========== Deploy to Server ==========
-  deploy:
+  # Stage 2: Build & Push Docker image (master only)
+  docker:
     needs: build
     runs-on: ubuntu-latest
-    if: github.event_name == 'push'
-    timeout-minutes: 15
-
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+    permissions:
+      contents: read
+      packages: write
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Download JAR artifact
+      - name: Download JAR
         uses: actions/download-artifact@v4
         with:
           name: app-jar
           path: target/
 
-      - name: Setup SSH key
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Deploy to server
-        uses: appleboy/ssh-action@v1.0.3
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha,format=short
+            type=raw,value=latest
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # Stage 3: Deploy to server (master only)
+  deploy:
+    needs: docker
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.DEPLOY_HOST }}
-          username: ${{ secrets.DEPLOY_USERNAME }}
+          username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
-          script_stop: true
           script: |
-            set -e
-
-            DEPLOY_DIR="/opt/smart-learn"
-
-            echo "=== Step 1: Pull latest code ==="
-            cd $DEPLOY_DIR
-            git pull origin master
-
-            echo "=== Step 2: Ensure .env.docker exists ==="
-            if [ ! -f .env.docker ]; then
-              echo "WARNING: .env.docker not found, creating with defaults"
-              cat > .env.docker << 'ENVEOF'
-            DB_PASSWORD=T9$$mK2pL8nQ4wX7vR3
-            JWT_SECRET=Y2hhbmdlLXRoaXMtdG8tYS1sb25nLXNlY3JldC1rZXktaW4tcHJvZHVjdGlvbi1lbnZpcm9ubWVudA==
-            MIMO_API_KEY=your-api-key
-            ENVEOF
-            fi
-
-            echo "=== Step 3: Stop old containers ==="
-            docker compose -f docker-compose.prod.yml down --remove-orphans 2>/dev/null || true
-
-            echo "=== Step 4: Build and start services ==="
-            docker compose -f docker-compose.prod.yml up -d --build
-
-            echo "=== Step 5: Wait for app to be healthy ==="
-            for i in $(seq 1 30); do
-              HEALTH=$(docker inspect smartlearn-app --format='{{.State.Health.Status}}' 2>/dev/null || echo "starting")
-              if [ "$HEALTH" = "healthy" ]; then
-                echo "✅ App is healthy after ${i} checks!"
-                break
-              fi
-              echo "⏳ Waiting... ($i/30) Status: $HEALTH"
-              sleep 3
-            done
-
-            echo ""
-            echo "=== Step 6: Service Status ==="
-            docker compose -f docker-compose.prod.yml ps
-
-            echo ""
-            echo "=== Step 7: API Health Check ==="
-            curl -sf http://localhost:7080/actuator/health && echo " ✅ Health OK" || echo " ❌ Health failed"
-
-            echo ""
-            echo "=== Step 8: Login Test ==="
-            curl -sf -X POST http://localhost:7080/api/auth/login \
-              -H "Content-Type: application/json" \
-              -d '{"username":"admin","password":"123456"}' | head -c 200 && echo " ✅ Login OK" || echo " ❌ Login failed"
-
-            echo ""
-            echo "=== Step 9: Memory Usage ==="
-            free -h
-
-            echo ""
-            echo "=== 🎉 Deployment Complete ==="
-            echo "Access: http://${{ secrets.DEPLOY_HOST }}:7080"
-            echo "Swagger: http://${{ secrets.DEPLOY_HOST }}:7080/swagger-ui.html"
+            cd /opt/smart-learn
+            echo "GHCR_TOKEN=${{ secrets.GITHUB_TOKEN }}" > .env.deploy
+            echo "GHCR_USER=${{ github.actor }}" >> .env.deploy
+            docker compose pull
+            docker compose up -d --force-recreate
+            docker image prune -f
+            echo "Deployed at $(date)" >> deploy.log
