@@ -1,5 +1,6 @@
 package com.smartlearn.platform.controller.student;
 
+import com.smartlearn.platform.annotation.Idempotent;
 import com.smartlearn.platform.dto.ApiResponse;
 import com.smartlearn.platform.dto.GradingReport;
 import com.smartlearn.platform.dto.LeaderboardEntry;
@@ -37,6 +38,7 @@ public class ExamController {
 
     @PostMapping("/submit")
     @Operation(summary = "提交答卷")
+    @Idempotent(prefix = "exam:submit:", ttlSeconds = 600, message = "请勿重复提交答卷")
     public ApiResponse<Void> submitExam(HttpServletRequest request, @Valid @RequestBody SubmitExamRequest req) {
         var userId = (Long) request.getAttribute("userId");
         examService.submitAnswer(userId, req.examRecordId(), req.answers(),

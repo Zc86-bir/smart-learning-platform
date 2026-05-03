@@ -106,9 +106,11 @@ const submitExam = async (force = false) => {
   })
 
   const duration = elapsed.value
+  const idempotencyKey = `exam-${examRecordId.value}-${Date.now()}`
   try {
     await api('/student/exams/submit', {
       method: 'POST',
+      headers: { 'X-Idempotency-Key': idempotencyKey },
       body: JSON.stringify({
         examRecordId: examRecordId.value,
         answers,
