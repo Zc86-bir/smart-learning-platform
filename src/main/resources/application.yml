@@ -17,6 +17,7 @@ spring:
   #           client-secret: your-github-client-secret
   #           scope: read:user,user:email
 
+  # Common datasource - overridden by profiles
   datasource:
     url: ${DB_URL:jdbc:mysql://localhost:3306/smart_learning?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true}
     username: ${DB_USERNAME:root}
@@ -53,7 +54,6 @@ mybatis-plus:
   type-aliases-package: com.smartlearn.platform.entity
   configuration:
     map-underscore-to-camel-case: true
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
   global-config:
     db-config:
       id-type: auto
@@ -67,18 +67,14 @@ mimo:
   base-url: https://api.xiaomimimo.com/v1
   api-key: ${MIMO_API_KEY:your-api-key-here}
   model: mimo-v2.5
-  # Question generation: thinking disabled, higher temperature
   question:
     thinking-type: disabled
     temperature: 0.7
-  # Grading: thinking enabled, lower temperature
   grading:
     thinking-type: enabled
     temperature: 0.2
-  # Request timeouts
   connect-timeout-seconds: 30
   request-timeout-seconds: 120
-  # Retry config for 429
   retry:
     max-attempts: 4
     initial-delay-ms: 1000
@@ -87,20 +83,6 @@ mimo:
 # Logging
 logging:
   config: classpath:logback-spring.xml
-  level:
-    com.smartlearn.platform: DEBUG
-    com.smartlearn.platform.client.mimo: INFO
-    org.mybatis: WARN
-    org.springframework.jdbc: WARN
-
-# SpringDoc OpenAPI
-springdoc:
-  api-docs:
-    path: /v3/api-docs
-  swagger-ui:
-    path: /swagger-ui.html
-    tags-sorter: alpha
-    operations-sorter: alpha
 
 # Actuator
 management:
@@ -116,5 +98,56 @@ management:
 app:
   jwt:
     secret: ${JWT_SECRET:Y2hhbmdlLXRoaXMtdG8tYS1sb25nLXNlY3JldC1rZXktaW4tcHJvZHVjdGlvbi1lbnZpcm9ubWVudA==}
-    expiration-ms: ${JWT_EXPIRATION_MS:86400000} # 24 hours
-    refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:604800000} # 7 days
+    expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+    refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:604800000}
+
+---
+# ==================== Development Profile ====================
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+logging:
+  level:
+    com.smartlearn.platform: DEBUG
+    com.smartlearn.platform.client.mimo: DEBUG
+    org.mybatis: DEBUG
+    org.springframework.jdbc: DEBUG
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+
+---
+# ==================== Production Profile ====================
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+
+logging:
+  level:
+    com.smartlearn.platform: INFO
+    com.smartlearn.platform.client.mimo: INFO
+    org.mybatis: WARN
+    org.springframework.jdbc: WARN
+
+# Disable Swagger in production
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
