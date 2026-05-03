@@ -3,17 +3,15 @@ package com.smartlearn.platform.service;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.smartlearn.platform.entity.AiUsageLog;
 import com.smartlearn.platform.mapper.AiUsageMapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.Map;
 
 @Service
+@Slf4j
 public class AiUsageService {
-
-    private static final Logger log = LoggerFactory.getLogger(AiUsageService.class);
 
     private final AiUsageMapper aiUsageMapper;
 

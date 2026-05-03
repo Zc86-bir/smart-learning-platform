@@ -7,8 +7,7 @@ import com.smartlearn.platform.client.mimo.MiMoAiClient;
 import com.smartlearn.platform.client.mimo.MiMoChat;
 import com.smartlearn.platform.entity.AiUsageLog;
 import com.smartlearn.platform.exception.BizException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -26,9 +25,9 @@ import java.util.function.Consumer;
  * When Spring AI becomes compatible with Spring Boot 4.0, swap implementation.
  */
 @Service
+@Slf4j
 public class AiChatService {
 
-    private static final Logger log = LoggerFactory.getLogger(AiChatService.class);
     private static final String AI_CACHE_PREFIX = "ai:cache:";
     private static final long AI_CACHE_TTL_MINUTES = 15;
 

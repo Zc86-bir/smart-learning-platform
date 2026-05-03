@@ -3,8 +3,7 @@ package com.smartlearn.platform.client.mimo;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -21,13 +20,9 @@ import java.util.concurrent.Flow;
 import java.util.concurrent.SubmissionPublisher;
 import java.util.function.Consumer;
 
-/**
- * MiMo AI async client backed by java.net.http.HttpClient + virtual threads.
- */
 @Component
+@Slf4j
 public class MiMoAiClient {
-
-    private static final Logger log = LoggerFactory.getLogger(MiMoAiClient.class);
 
     private final HttpClient httpClient;
     private final ExecutorService virtualThreadExecutor;

@@ -8,8 +8,7 @@ import com.smartlearn.platform.dto.TutorMessageDTO;
 import com.smartlearn.platform.exception.BizException;
 import com.smartlearn.platform.service.AiChatService;
 import com.smartlearn.platform.service.AiTutorService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -21,9 +20,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Service
+@Slf4j
 public class AiTutorServiceImpl implements AiTutorService {
-
-    private static final Logger log = LoggerFactory.getLogger(AiTutorServiceImpl.class);
     private static final long MAX_ROUNDS = 10;
     private static final long TTL_MINUTES = 30;
 

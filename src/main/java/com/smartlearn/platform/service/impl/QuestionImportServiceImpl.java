@@ -16,8 +16,7 @@ import org.apache.pdfbox.rendering.ImageType;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.imageio.ImageIO;
@@ -33,9 +32,8 @@ import java.util.List;
 import java.util.Map;
 
 @Service
+@Slf4j
 public class QuestionImportServiceImpl implements QuestionImportService {
-
-    private static final Logger log = LoggerFactory.getLogger(QuestionImportServiceImpl.class);
 
     private final QuestionMapper questionMapper;
     private final AiChatService aiChatService;

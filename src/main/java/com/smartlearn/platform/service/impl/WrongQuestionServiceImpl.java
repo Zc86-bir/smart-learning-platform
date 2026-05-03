@@ -9,8 +9,7 @@ import com.smartlearn.platform.entity.WrongQuestion;
 import com.smartlearn.platform.mapper.QuestionMapper;
 import com.smartlearn.platform.mapper.WrongQuestionMapper;
 import com.smartlearn.platform.service.WrongQuestionService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -19,9 +18,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 @Service
+@Slf4j
 public class WrongQuestionServiceImpl implements WrongQuestionService {
-
-    private static final Logger log = LoggerFactory.getLogger(WrongQuestionServiceImpl.class);
 
     private final WrongQuestionMapper wrongQuestionMapper;
     private final QuestionMapper questionMapper;

@@ -86,9 +86,12 @@ mimo:
 
 # Logging
 logging:
+  config: classpath:logback-spring.xml
   level:
-    com.smartlearn: DEBUG
+    com.smartlearn.platform: DEBUG
     com.smartlearn.platform.client.mimo: INFO
+    org.mybatis: WARN
+    org.springframework.jdbc: WARN
 
 # SpringDoc OpenAPI
 springdoc:

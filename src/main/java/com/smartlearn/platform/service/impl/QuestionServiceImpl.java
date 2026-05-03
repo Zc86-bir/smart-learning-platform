@@ -16,8 +16,7 @@ import com.smartlearn.platform.mapper.QuestionMapper;
 import com.smartlearn.platform.request.GenerateQuestionsRequest;
 import com.smartlearn.platform.service.AiChatService;
 import com.smartlearn.platform.service.QuestionService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -26,9 +25,8 @@ import java.util.List;
 import java.util.Map;
 
 @Service
+@Slf4j
 public class QuestionServiceImpl implements QuestionService {
-
-    private static final Logger log = LoggerFactory.getLogger(QuestionServiceImpl.class);
     private static final String HOT_QUESTIONS_KEY = "hot:questions";
 
     private final QuestionMapper questionMapper;

@@ -18,8 +18,7 @@ import com.smartlearn.platform.mapper.QuestionMapper;
 import com.smartlearn.platform.service.AiChatService;
 import com.smartlearn.platform.service.ExamService;
 import com.smartlearn.platform.service.WrongQuestionService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -30,9 +29,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
 @Service
+@Slf4j
 public class ExamServiceImpl implements ExamService {
-
-    private static final Logger log = LoggerFactory.getLogger(ExamServiceImpl.class);
     private static final String LEADERBOARD_KEY_PREFIX = "leaderboard:";
     private static final String HEARTBEAT_TIMEOUT_KEY = "heartbeat:";
     private static final long HEARTBEAT_TIMEOUT_SECONDS = 120;
